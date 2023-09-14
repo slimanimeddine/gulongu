@@ -1,8 +1,15 @@
 import { Logo } from "./logo";
 import Link from "next/link";
 import { FacebookIcon, TwitterIcon, DiscordIcon, PlayStoreSVG, AppStoreSVG } from "./svgIcons";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+    const pathname = usePathname()
+    const routes = ["/signUp", "/login"]
+    const hide = routes.includes(pathname)
+
+    if (hide) return <></>
+
     return (
         <footer className="capitalize px-20 bg-gray-50 dark:bg-zinc-950">
             <div className="flex gap-5 justify-between py-12 max-md:flex-col">

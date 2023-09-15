@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 export function Footer() {
     const pathname = usePathname()
-    const routes = ["/signUp", "/login"]
+    const routes = ["/signup", "/login"]
     const hide = routes.includes(pathname)
 
     if (hide) return <></>

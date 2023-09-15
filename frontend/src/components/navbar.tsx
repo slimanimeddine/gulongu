@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 
 export function Navbar() {
     const pathname = usePathname()
-    const routes = ["/signUp", "/login"]
+    const routes = ["/signup", "/login"]
     const hide = routes.includes(pathname)
 
     return (

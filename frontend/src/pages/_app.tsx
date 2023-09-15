@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const queryClient = new QueryClient()
-
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class">
@@ -26,7 +26,6 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         </Layout>
       </ThemeProvider>
     </QueryClientProvider>
-
   )
 };
 

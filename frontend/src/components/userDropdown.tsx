@@ -1,11 +1,38 @@
 import { Popover, Transition } from '@headlessui/react'
 import { ModeSwitch } from './modeSwitch'
-import { Fragment, useState } from 'react'
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { UserCircle, UserIcon } from './svgIcons'
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import axios from "@/lib/axios";
+import { TUserSchema } from '@/types/userSchema'
 
 export function UserDropdown() {
-    const [isLoggedIn] = useState(true)
+    const queryClient = useQueryClient()
+
+    const userQuery = useQuery<TUserSchema>('user', () => {
+        return axios
+                .get('/api/user')
+                .then(res => res.data)
+                .catch(err => err)
+    })
+
+    console.log(userQuery.data)
+
+    const logOutMutation = useMutation({
+        mutationFn: () => {
+            return axios.post('/logout')
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user'] })
+        }
+    })
+
+    const logOut = async () => {
+        await axios.get('/sanctum/csrf-cookie')
+        logOutMutation.mutate()
+    }
+
     return (
         <Popover as="div">
             <Popover.Button className="bg-gray-100 rounded-full p-3 hover:bg-gray-200 outline-none dark:bg-zinc-700 dark:hover:bg-black">
@@ -23,7 +50,7 @@ export function UserDropdown() {
                 <Popover.Panel className="absolute z-50 top-[73px] right-6 bg-white rounded-md shadow-lg w-80 border border-gray-300  dark:bg-zinc-800 dark:border-none max-md:w-full max-md:rounded-none max-md:absolute max-md:right-0">
                     <div className="flex justify-center">
                         {
-                            !isLoggedIn
+                            !userQuery.data?.id
                                 ? <Link href={"/login"} className="hover:drop-shadow-md bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full py-[4px] w-44 my-4 mx-4 text-center">log in</Link>
                                 : <div className="flex flex-col w-full">
                                     <div
@@ -46,6 +73,7 @@ export function UserDropdown() {
                                     </Link>
                                     <button
                                         className="text-left text-sm font-semibold pl-4 py-2 hover:bg-gray-100 dark:hover:bg-stone-600"
+                                        onClick={logOut}
                                     >
                                         Log out
                                     </button>

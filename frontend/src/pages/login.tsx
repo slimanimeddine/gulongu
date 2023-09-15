@@ -7,21 +7,33 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { TLogInServerErrorsSchema } from "@/types/logInServerErrors";
 import { InputError } from "@/components/inputError";
-import { useMutation } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import axios from "@/lib/axios";
+import { TUserSchema } from "@/types/userSchema";
 
 export default function Login() {
     const router = useRouter()
+    
+    const userQuery = useQuery<TUserSchema>('user', () => {
+        return axios
+                .get('/api/user')
+                .then(res => res.data)
+                .catch(err => err)
+    })
+
+    if (userQuery.data?.id) {
+        router.push("/")
+    }
 
     const [serverErrors, setServerErrors] = useState<TLogInServerErrorsSchema>()
-    
-    const mutation = useMutation((props: TLogInSchema) => {
+
+    const logInMutation = useMutation((props: TLogInSchema) => {
         return axios
-                .post('/login', props)
-                .then()
-                .catch(error => {
-                    setServerErrors(error.response.data.errors)
-                })
+            .post('/login', props)
+            .then()
+            .catch(error => {
+                setServerErrors(error.response.data.errors)
+            })
     })
 
     const {
@@ -39,8 +51,8 @@ export default function Login() {
 
     const onSubmit = async (data: TLogInSchema) => {
         await axios.get('/sanctum/csrf-cookie')
-        mutation.mutate(data)
-       
+        logInMutation.mutate(data)
+
         if (serverErrors) {
             if (serverErrors.email) {
                 setError("email", {
@@ -54,9 +66,10 @@ export default function Login() {
                     message: serverErrors.password[0]
                 });
             }
+        } else {
+            reset()
+            router.push("/")
         }
-        reset()
-        router.push("/")
     }
 
     return (
@@ -81,7 +94,7 @@ export default function Login() {
                             <div className="mt-2">
                                 <input
                                     {...register("email")}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                                    className="block w-full px-2 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                                 />
                                 <InputError
                                     error={errors.email}
@@ -104,8 +117,8 @@ export default function Login() {
                             <div className="mt-2">
                                 <input
                                     type="password"
-                                    {...register("email")}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                                    {...register("password")}
+                                    className="block w-full px-2 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                                 />
                                 <InputError
                                     error={errors.password}
@@ -114,9 +127,6 @@ export default function Login() {
                             </div>
                         </div>
                         <div className="text-sm">
-                            <Link href="" className="font-semibold text-blue-600 hover:text-blue-500">
-                                Forgot password?
-                            </Link>
                             <div>
                                 <button
                                     type="submit"

@@ -7,15 +7,27 @@ import { useState } from "react";
 import { TSignUpServerErrorsSchema } from "@/types/signUpServerErrors";
 import { useRouter } from "next/navigation";
 import { InputError } from "@/components/inputError";
-import { useMutation } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import axios from "@/lib/axios";
+import { TUserSchema } from "@/types/userSchema";
 
 export default function SignUp() {
     const router = useRouter()
 
+    const userQuery = useQuery<TUserSchema>('user', () => {
+        return axios
+                .get('/api/user')
+                .then(res => res.data)
+                .catch(err => err)
+    })
+
+    if (userQuery.data?.id) {
+        router.push("/")
+    }
+
     const [serverErrors, setServerErrors] = useState<TSignUpServerErrorsSchema>()
 
-    const mutation = useMutation((props: TSignUpSchema) => {
+    const signUpMutation = useMutation((props: TSignUpSchema) => {
         return axios
                 .post('/register', props)
                 .then()
@@ -39,7 +51,7 @@ export default function SignUp() {
 
     const onSubmit = async (data: TSignUpSchema) => {
         await axios.get('/sanctum/csrf-cookie')
-        mutation.mutate(data)
+        signUpMutation.mutate(data)
        
         if (serverErrors) {
             if (serverErrors.username) {
@@ -66,9 +78,10 @@ export default function SignUp() {
                     message: serverErrors.password_confirmation[0]
                 });
             }
+        } else {
+            reset()
+            router.push("/login")
         }
-        reset()
-        router.push("/login")
     }
 
     return (

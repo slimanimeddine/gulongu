@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\ChapterController;
+use App\Http\Controllers\NovelController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewReplyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

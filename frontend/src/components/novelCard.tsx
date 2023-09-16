@@ -8,6 +8,7 @@ export interface NovelCardProps {
   title: string,
   likes: number,
   synopsis: string,
+  slug: string,
 }
 
 export interface NovelCardPropsSeries {
@@ -24,11 +25,12 @@ export function NovelCard({
   title,
   likes,
   synopsis,
+  slug
 }: NovelCardProps) {
   return (
     <div className={"rounded-md bg-gradient-to-r from-blue-200 to-blue-500 flex flex-col gap-2 p-3 items-center w-70"}>
       <span className="text-base text-white font-medium capitalize">{genre}</span>
-      <Link href="novel/xyz">
+      <Link href={`novel/${slug}`}>
         {
           imageSrc
             ? <Image
@@ -80,7 +82,7 @@ export function NovelCardSeries({
           <span className="font-medium">{likes}%</span>
         </div>
         <Link href="novel/xyz" className="text-sm line-clamp-3 hover:underline hover:underline-offset-1">{synopsis}</Link>
-        <div className="flex justify-start gap-2 mt-8">
+        <div className="flex justify-start gap-2 mt-8 flex-wrap">
           {genres.map(item => (
             <div key={item} className="px-4 py-1 capitalize text-sm font-medium rounded-md border  hover:text-sky-500 hover:border-sky-500 hover:cursor-pointer dark:text-gray-400 dark:hover:text-sky-500">{item}</div>
           ))}

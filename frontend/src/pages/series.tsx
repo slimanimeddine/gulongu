@@ -1,17 +1,33 @@
 import Head from "next/head";
-import { type NovelCardPropsSeries, NovelCardSeries } from "@/components/novelCard";
+import { NovelCardSeries } from "@/components/novelCard";
 import { SortRadioGroup } from "@/components/sortRadioGroup";
 import { FilterCombobox } from "@/components/filterCombobox";
+import { useNovels } from "@/hooks/useNovels";
+import { filterFieldsSeries } from "@/helpers/filterFields";
+import { getRandomNumber } from "@/helpers/getRandomNumber";
+import { INovel } from "@/types/novelType";
+import { Loading } from "@/components/loading";
+import { ServerError } from "@/components/serverError";
 
 export default function Series() {
-    const novelProps: NovelCardPropsSeries = {
-        genres: ["fantasy", "action"],
-        title: "spirit realm",
-        likes: 55,
-        synopsis: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores, facere fugit. Libero eaque corrupti atque, sit ipsum iure dolore perspiciatis quia fuga rem harum ex iusto omnis sapiente. Incidunt, natus."
+    let elementToRender
+    const { data, isLoading, isError, error } = useNovels()
+    if (data) {
+        const novelsData = data.map((item: INovel) => filterFieldsSeries(item))
+        elementToRender = <div className="grid gap-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1 max-sm:px-5 px-20 my-5">
+            {novelsData.map(item => (
+                <NovelCardSeries {...item} key={item.id} likes={getRandomNumber()} />
+            ))}
+        </div>
     }
 
-    const novelCards = Array(20).fill(novelProps)
+    if (isLoading) {
+        elementToRender = <Loading />
+    }
+
+    if (isError) {
+        elementToRender = <ServerError message={error?.message ?? "can't find resource"} />
+    }
 
     return (
         <>
@@ -23,11 +39,7 @@ export default function Series() {
                 <SortRadioGroup />
                 <FilterCombobox />
             </div>
-            <div className="grid gap-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1 max-sm:px-5 px-20 my-5">
-                {novelCards.map((item, i) => (
-                    <NovelCardSeries {...item} key={i} />
-                ))}
-            </div>
+            {elementToRender}
         </>
     )
 }

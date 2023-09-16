@@ -1,76 +1,32 @@
 import Link from "next/link";
 import Head from "next/head";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { TLogInSchema, logInSchema } from "@/types/logInSchema";
-import { useRouter } from "next/router";
-import { useState } from "react";
-import { TLogInServerErrorsSchema } from "@/types/logInServerErrors";
 import { InputError } from "@/components/inputError";
-import { useMutation, useQuery } from "react-query";
-import axios from "@/lib/axios";
-import { TUserSchema } from "@/types/userSchema";
+import { useUser } from "@/hooks/useUser";
+import { useRedirect } from "@/hooks/useRedirect";
+import { useLogin } from "@/hooks/useLogIn";
+import { TLogInServerErrorsSchema } from "@/types/logInServerErrors";
+import { useState } from "react";
 
 export default function Login() {
-    const router = useRouter()
-    
-    const userQuery = useQuery<TUserSchema>('user', () => {
-        return axios
-                .get('/api/user')
-                .then(res => res.data)
-                .catch(err => err)
-    })
+    const { data: user } = useUser()
+    const { redirectTo } = useRedirect()
+    const [serverErrors, setServerErrors] = useState<TLogInServerErrorsSchema>({})
 
-    if (userQuery.data?.id) {
-        router.push("/")
+    if (user?.id) {
+        redirectTo("/")
     }
-
-    const [serverErrors, setServerErrors] = useState<TLogInServerErrorsSchema>()
-
-    const logInMutation = useMutation((props: TLogInSchema) => {
-        return axios
-            .post('/login', props)
-            .then()
-            .catch(error => {
-                setServerErrors(error.response.data.errors)
-            })
-    })
 
     const {
         register,
         handleSubmit,
-        formState: {
-            errors,
-            isSubmitting
-        },
-        reset,
-        setError,
-    } = useForm<TLogInSchema>({
-        resolver: zodResolver(logInSchema)
+        errors,
+        isSubmitting,
+        onSubmit
+    } = useLogin({
+        serverErrors,
+        setServerErrors
     })
-
-    const onSubmit = async (data: TLogInSchema) => {
-        await axios.get('/sanctum/csrf-cookie')
-        logInMutation.mutate(data)
-
-        if (serverErrors) {
-            if (serverErrors.email) {
-                setError("email", {
-                    type: "server",
-                    message: serverErrors.email[0]
-                });
-            }
-            if (serverErrors.password) {
-                setError("password", {
-                    type: "server",
-                    message: serverErrors.password[0]
-                });
-            }
-        } else {
-            reset()
-            router.push("/")
-        }
-    }
+    console.log("errors: ", errors)
 
     return (
         <>

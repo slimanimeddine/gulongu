@@ -1,88 +1,31 @@
 import Link from "next/link";
 import Head from "next/head";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { TSignUpSchema, signUpSchema } from "@/types/signUpSchema";
+import { InputError } from "@/components/inputError";
+import { useRedirect } from "@/hooks/useRedirect";
+import { useUser } from "@/hooks/useUser";
+import { useSignUp } from "@/hooks/useSignUp";
 import { useState } from "react";
 import { TSignUpServerErrorsSchema } from "@/types/signUpServerErrors";
-import { useRouter } from "next/navigation";
-import { InputError } from "@/components/inputError";
-import { useMutation, useQuery } from "react-query";
-import axios from "@/lib/axios";
-import { TUserSchema } from "@/types/userSchema";
 
 export default function SignUp() {
-    const router = useRouter()
+    const { data: user } = useUser()
+    const { redirectTo } = useRedirect()
+    const [serverErrors, setServerErrors] = useState<TSignUpServerErrorsSchema>({})
 
-    const userQuery = useQuery<TUserSchema>('user', () => {
-        return axios
-                .get('/api/user')
-                .then(res => res.data)
-                .catch(err => err)
-    })
-
-    if (userQuery.data?.id) {
-        router.push("/")
+    if (user?.id) {
+        redirectTo("/")
     }
-
-    const [serverErrors, setServerErrors] = useState<TSignUpServerErrorsSchema>()
-
-    const signUpMutation = useMutation((props: TSignUpSchema) => {
-        return axios
-                .post('/register', props)
-                .then()
-                .catch(error => {
-                    setServerErrors(error.response.data.errors)
-                })
-    })
 
     const {
         register,
         handleSubmit,
-        formState: {
-            errors,
-            isSubmitting
-        },
-        reset,
-        setError,
-    } = useForm<TSignUpSchema>({
-        resolver: zodResolver(signUpSchema)
+        errors,
+        isSubmitting,
+        onSubmit
+    } = useSignUp({
+        serverErrors,
+        setServerErrors
     })
-
-    const onSubmit = async (data: TSignUpSchema) => {
-        await axios.get('/sanctum/csrf-cookie')
-        signUpMutation.mutate(data)
-       
-        if (serverErrors) {
-            if (serverErrors.username) {
-                setError("username", {
-                    type: "server",
-                    message: serverErrors.username[0]
-                });
-            }
-            if (serverErrors.email) {
-                setError("email", {
-                    type: "server",
-                    message: serverErrors.email[0]
-                });
-            }
-            if (serverErrors.password) {
-                setError("password", {
-                    type: "server",
-                    message: serverErrors.password[0]
-                });
-            }
-            if (serverErrors.password_confirmation) {
-                setError("password_confirmation", {
-                    type: "server",
-                    message: serverErrors.password_confirmation[0]
-                });
-            }
-        } else {
-            reset()
-            router.push("/login")
-        }
-    }
 
     return (
         <>

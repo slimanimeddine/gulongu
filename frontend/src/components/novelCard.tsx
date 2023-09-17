@@ -17,6 +17,7 @@ export interface NovelCardPropsSeries {
   title: string,
   likes: number,
   synopsis: string,
+  slug: string,
 }
 
 export function NovelCard({
@@ -44,7 +45,7 @@ export function NovelCard({
             </div>
         }
       </Link>
-      <Link href="novel/xyz" className="text-base font-bold capitalize dark:text-black">{title}</Link>
+      <Link href={`novel/${slug}`} className="text-base font-bold capitalize dark:text-black">{title}</Link>
       <div className="flex">
         <ThumbUpIcon series={false} />
         <span className="font-medium dark:text-black">{likes}%</span>
@@ -60,6 +61,7 @@ export function NovelCardSeries({
   title,
   likes,
   synopsis,
+  slug
 }: NovelCardPropsSeries) {
   return (
     <div className="flex justify-start gap-3">
@@ -76,12 +78,12 @@ export function NovelCardSeries({
           </div>
       }
       <div className="flex flex-col justify-between">
-        <Link href="novel/xyz" className="capitalize text-lg font-semibold hover:underline hover:underline-offset-1">{title}</Link>
+        <Link href={`novel/${slug}`} className="capitalize text-lg font-semibold hover:underline hover:underline-offset-1">{title}</Link>
         <div className="flex">
           <ThumbUpIcon series={true} />
           <span className="font-medium">{likes}%</span>
         </div>
-        <Link href="novel/xyz" className="text-sm line-clamp-3 hover:underline hover:underline-offset-1">{synopsis}</Link>
+        <Link href={`novel/${slug}`} className="text-sm line-clamp-3 hover:underline hover:underline-offset-1">{synopsis}</Link>
         <div className="flex justify-start gap-2 mt-8 flex-wrap">
           {genres.map(item => (
             <div key={item} className="px-4 py-1 capitalize text-sm font-medium rounded-md border  hover:text-sky-500 hover:border-sky-500 hover:cursor-pointer dark:text-gray-400 dark:hover:text-sky-500">{item}</div>

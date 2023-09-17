@@ -30,7 +30,10 @@ class ReviewReplyController extends Controller
                 'authorUsername' => $user->username
             ]);
 
-            return response()->json(['message' => 'review reply added successfully', 'review' => $reviewReply], 200);
+            return response()->json([
+                'message' => 'review reply added successfully',
+                'review' => $reviewReply
+            ], 200);
         }
     }
 }

@@ -31,11 +31,9 @@ class ChapterController extends Controller
     {
         //
         $chapter = Chapter::find($id);
-        $novel = $chapter->novel;
         
         return response()->json([
             'chapter' => $chapter,
-            'novel' => $novel
         ], 200);
     }
 

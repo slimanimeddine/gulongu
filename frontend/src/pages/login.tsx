@@ -26,7 +26,6 @@ export default function Login() {
         serverErrors,
         setServerErrors
     })
-    console.log("errors: ", errors)
 
     return (
         <>

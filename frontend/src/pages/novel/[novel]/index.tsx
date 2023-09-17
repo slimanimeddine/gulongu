@@ -4,14 +4,18 @@ import { Tab, Popover, Disclosure } from '@headlessui/react'
 import { NovelInfos } from "@/components/novelInfos";
 import { Review, type ReviewProps, ReviewsModal } from "@/components/review";
 import { BigThumbUpIcon, CaretDownIcon, CaretUpIcon, ChevronDownIcon, ChevronUpIcon } from "@/components/svgIcons";
+import { useNovel } from "@/hooks/useNovel";
+import { useRouter } from "next/router";
+import { Loading } from "@/components/loading";
+import { ServerError } from "@/components/serverError";
+import { useNovelChapters } from "@/hooks/useNovelChapters";
+import Link from "next/link";
 
 function classNames(...classes: (string | boolean)[]) {
     return classes.filter(Boolean).join(' ')
 }
 
 export default function Novel() {
-    const [sort, setSort] = useState("newest")
-
     const novelReview = {
         username: "Hexflex445",
         date: "4 years ago",
@@ -61,6 +65,78 @@ export default function Novel() {
         percLikes: 78,
         reviews
     }
+    /////////////////////////////////////////////////////////////
+    const [sort, setSort] = useState("newest")
+    const router = useRouter()
+    const slug = `${router.query.novel}`
+
+    // getting novel data
+    let novelInfosCard
+
+    const {
+        data: dataNovel,
+        isLoading: isLoadingNovel,
+        isError: isErrorNovel,
+        error: errorNovel
+    } = useNovel(slug)
+
+    if (dataNovel?.novel) {
+        const novelData = {
+            title: dataNovel.novel.title,
+            rating: 77,
+            author: "gu long",
+            translator: dataNovel.novel.translator,
+            synopsis: dataNovel.novel.synopsis,
+            nbReviews: 40,
+            percLikes: 78,
+        }
+        novelInfosCard = <NovelInfos {...novelData} reviews={reviews} viewAll={false} />
+    }
+
+    if (isLoadingNovel) {
+        novelInfosCard = <Loading />
+    }
+
+    if (isErrorNovel) {
+        novelInfosCard = <ServerError message={errorNovel?.message ?? "can't find resource"} />
+    }
+
+    // get novel chapters
+    let chapters: JSX.Element
+
+    const {
+        data: dataChapters,
+        isLoading: isLoadingChapters,
+        isError: isErrorChapters,
+        error: errorChapters
+    } = useNovelChapters(slug)
+
+    if (dataChapters?.chapters) {
+        chapters =
+            <div className="bg-gray-100 dark:bg-stone-800 rounded-b-xl">
+                <div className="px-8 py-5 grid grid-cols-2 gap-4 max-md:grid-cols-1">
+                    {dataChapters.chapters.map(item => (
+                        <Link
+                            href={`${slug}/${item.slug}`}
+                            className="flex flex-col border-b border-gray-400 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700"
+                            key={item.id}
+                        >
+                            <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200">{item.title}</span>
+                            <span className="text-sm text-gray-400 dark:text-gray-300">{item.created_at}</span>
+                        </Link>
+                    ))}
+
+                </div>
+            </div>
+    }
+
+    if (isLoadingChapters) {
+        chapters = <Loading />
+    }
+
+    if (isErrorChapters) {
+        chapters = <ServerError message={errorChapters?.message ?? "can't find resource"} />
+    }
 
     return (
         <>
@@ -69,7 +145,7 @@ export default function Novel() {
                 <meta property="og:title" content="A Record of a Mortal's Journey to Immortality: Immortal Realm | Gulongu" key="title" />
             </Head>
             <div className="flex justify-center items-center bg-zinc-100 dark:bg-stone-800">
-                <NovelInfos {...novelInfos} viewAll={false} />
+                {novelInfosCard}
             </div>
             <Tab.Group>
                 <Tab.List className="max-w-4xl flex justify-start mx-auto">
@@ -93,16 +169,16 @@ export default function Novel() {
                             <div className="flex justify-start gap-20 text-gray-600 capitalize dark:text-stone-200">
                                 <div className="flex flex-col">
                                     <span>chapters</span>
-                                    <strong>7 chapters</strong>
+                                    <strong>{dataNovel?.novel?.numberOfChapters} chapters</strong>
                                 </div>
                                 <div className="flex flex-col">
                                     <span>licensed from</span>
-                                    <strong>zongheng</strong>
+                                    <strong>unknown</strong>
                                 </div>
                             </div>
                             <div className="flex justify-start gap-1 flex-wrap">
                                 {
-                                    ["fantasy", "action", "drama", "harem", "xianxia"].map(item => (
+                                    dataNovel?.novel?.genres.map(item => (
                                         <div key={item} className="px-4 py-1 capitalize text-sm font-medium rounded-md border  hover:text-sky-500 hover:border-sky-500 hover:cursor-pointer dark:text-gray-200 dark:hover:text-sky-500">{item}</div>
                                     ))
                                 }
@@ -112,9 +188,9 @@ export default function Novel() {
                             <div className="text-start text-xl font-semibold outline-none capitalize dark:text-stone-200">
                                 Details
                             </div>
-                            <p className="text-gray-600 dark:text-stone-200 capitalize">Written by On Azure Phoenix Peak (青鸾峰上)</p>
-                            <p className="text-gray-600 dark:text-stone-200 capitalize">Translated by: Coca and Corliss</p>
-                            <p className="text-gray-600 dark:text-stone-200 capitalize">Edited by: Veela</p>
+                            <p className="text-gray-600 dark:text-stone-200 capitalize">Written by Gu Long</p>
+                            <p className="text-gray-600 dark:text-stone-200 capitalize">Translated by: {dataNovel?.novel?.translator}</p>
+                            <p className="text-gray-600 dark:text-stone-200 capitalize">Edited by: unknown</p>
                         </div>
                         <div className="max-w-4xl py-5 mx-auto flex flex-col justify-between items-start gap-5">
                             <div className="text-start text-xl font-semibold outline-none capitalize dark:text-stone-200">
@@ -142,11 +218,12 @@ export default function Novel() {
                         <div className="max-w-4xl py-5 mx-auto flex flex-col justify-between items-start gap-5">
                             <div className="flex w-full justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="capitalize text-gray-600 font-medium dark:text-gray-200">latest chapter</span>
+                                    {/* <span className="capitalize text-gray-600 font-medium dark:text-gray-200">latest chapter</span>
                                     <div className="inline-flex items-center gap-1">
                                         <span className="capitalize text-lg font-bold">chapter 245</span>
                                         <span className="text-sm text-gray-600 dark:text-gray-200">a year ago</span>
-                                    </div>
+                                    </div> */}
+                                    <div></div>
                                 </div>
                                 <Popover className="relative">
                                     {({ open }) => (
@@ -185,17 +262,8 @@ export default function Novel() {
                                                         : <ChevronDownIcon />
                                                 }
                                             </Disclosure.Button>
-                                            <Disclosure.Panel className="bg-gray-100 dark:bg-stone-800 rounded-b-xl">
-                                                <div className="px-8 py-5 grid grid-cols-2 gap-4 max-md:grid-cols-1">
-                                                    <div className="flex flex-col border-b border-gray-400 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700">
-                                                        <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200">chapter 1</span>
-                                                        <span className="text-sm text-gray-400 dark:text-gray-300">2021.08.18</span>
-                                                    </div>
-                                                    <div className="flex flex-col border-b border-gray-400 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700">
-                                                        <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200">chapter 1</span>
-                                                        <span className="text-sm text-gray-400 dark:text-gray-300">2021.08.18</span>
-                                                    </div>
-                                                </div>
+                                            <Disclosure.Panel>
+                                                {chapters}
                                             </Disclosure.Panel>
                                         </div>
                                     </>

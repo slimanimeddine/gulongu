@@ -7,4 +7,5 @@ export interface INovel {
     title: string,
     translator: string,
     updated_at: string,
+    numberOfChapters: number
 }

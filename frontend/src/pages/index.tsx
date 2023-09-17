@@ -28,7 +28,6 @@ export default function Home() {
     elementToRender = <ServerError message={error?.message ?? "can't find resource"} />
   }
 
-  console.log(data)
   return (
     <div className="px-20 py-10">
       <Head>

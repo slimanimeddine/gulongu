@@ -32,10 +32,9 @@ class NovelController extends Controller
         $novel = Novel::find($id);
         $chapters = $novel->chapters;
         
-        return response([
+        return response()->json([
             'novel' => $novel,
-            'chapters' => $chapters
-        ], 200)->header('Content-Type', 'application/json');
+        ], 200);
     }
 
     /**
@@ -52,5 +51,39 @@ class NovelController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Get novel by its slug
+     */
+    public function getNovelBySlug(string $slug)
+    {
+        //
+        $novel = Novel::firstWhere('slug', $slug);
+                
+        return response()->json([
+            'novel' => $novel,
+        ], 200);
+    }
+
+    /**
+     * Get novel's chapters by its slug
+     */
+    public function getNovelsChapters(string $slug)
+    {
+        //
+        $novel = Novel::firstWhere('slug', $slug);
+        $chapters = $novel->chapters->map(function ($chapter) {
+            return [
+                'id' => $chapter->id,
+                'title' => $chapter->title,
+                'slug' => $chapter->slug,
+                'created_at' => $chapter->created_at->format('Y-m-d')
+            ];
+        });
+                
+        return response()->json([
+            'chapters' => $chapters,
+        ], 200);
     }
 }

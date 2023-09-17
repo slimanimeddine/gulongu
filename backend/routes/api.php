@@ -35,7 +35,13 @@ Route::get('/novels', [NovelController::class, 'index']);
 Route::get('/chapters', [ChapterController::class, 'index']);
 
 // get a novel by its id
-Route::get('/novels/{id}', [NovelController::class, 'show']);
+Route::get('/novels/{id}', [NovelController::class, 'show'])->where('id', '[0-9]+');
+
+// get a novel by its slug
+Route::get('/novels/{slug}', [NovelController::class, 'getNovelBySlug']);
 
 // get a chapter by its id
-Route::get('/chapters/{id}', [ChapterController::class, 'show']);
+Route::get('/chapters/{id}', [ChapterController::class, 'show'])->where('id', '[0-9]+');
+
+// get a novel's chapters by its slug
+Route::get('/novels/{slug}/chapters', [NovelController::class, 'getNovelsChapters']);

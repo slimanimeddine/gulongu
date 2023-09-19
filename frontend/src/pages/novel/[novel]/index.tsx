@@ -80,6 +80,13 @@ export default function Novel() {
         error: errorNovel
     } = useNovel(slug)
 
+    const {
+        data: dataChapters,
+        isLoading: isLoadingChapters,
+        isError: isErrorChapters,
+        error: errorChapters
+    } = useNovelChapters(slug)
+
     if (dataNovel?.novel) {
         const novelData = {
             title: dataNovel.novel.title,
@@ -90,7 +97,7 @@ export default function Novel() {
             nbReviews: 40,
             percLikes: 78,
         }
-        novelInfosCard = <NovelInfos {...novelData} reviews={reviews} viewAll={false} />
+        novelInfosCard = <NovelInfos {...novelData} reviews={reviews} firstChapterUrl={`${slug}/${dataChapters?.chapters[0].slug ?? ""}`} viewAll={false} />
     }
 
     if (isLoadingNovel) {
@@ -103,13 +110,6 @@ export default function Novel() {
 
     // get novel chapters
     let chapters: JSX.Element
-
-    const {
-        data: dataChapters,
-        isLoading: isLoadingChapters,
-        isError: isErrorChapters,
-        error: errorChapters
-    } = useNovelChapters(slug)
 
     if (dataChapters?.chapters) {
         chapters =
@@ -141,8 +141,8 @@ export default function Novel() {
     return (
         <>
             <Head>
-                <title>A Record of a Mortal&#x27;s Journey to Immortality: Immortal Realm | Gulongu</title>
-                <meta property="og:title" content="A Record of a Mortal's Journey to Immortality: Immortal Realm | Gulongu" key="title" />
+                <title>{`${dataNovel?.novel.title ?? ""} | Gulongu`}</title>
+                <meta property="og:title" content={`${dataNovel?.novel.title ?? ""} | Gulongu`} key="title" />
             </Head>
             <div className="flex justify-center items-center bg-zinc-100 dark:bg-stone-800">
                 {novelInfosCard}

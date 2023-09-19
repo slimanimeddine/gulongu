@@ -31,7 +31,7 @@ class NovelController extends Controller
         //
         $novel = Novel::find($id);
         $chapters = $novel->chapters;
-        
+
         return response()->json([
             'novel' => $novel,
         ], 200);
@@ -60,7 +60,7 @@ class NovelController extends Controller
     {
         //
         $novel = Novel::firstWhere('slug', $slug);
-                
+
         return response()->json([
             'novel' => $novel,
         ], 200);
@@ -81,7 +81,7 @@ class NovelController extends Controller
                 'created_at' => $chapter->created_at->format('Y-m-d')
             ];
         });
-                
+
         return response()->json([
             'chapters' => $chapters,
         ], 200);

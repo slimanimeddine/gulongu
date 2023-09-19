@@ -12,12 +12,14 @@ interface NovelInfosProps {
     author: string,
     translator: string,
     synopsis: string,
+    firstChapterUrl: string
 }
 
 export type NovelInfosPropsWithReviewsModalProps = NovelInfosProps & ReviewsModalProps
 
 export function NovelInfos({
     imageSrc,
+    firstChapterUrl,
     title,
     rating,
     author,
@@ -80,7 +82,7 @@ export function NovelInfos({
                             )
                     }
                 </div>
-                <Link href="chapter/xyz" className="bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-xl text-xl font-medium text-center py-4 w-80 max-md:w-full">start reading</Link>
+                <Link href={firstChapterUrl} className="bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-xl text-xl font-medium text-center py-4 w-80 max-md:w-full">start reading</Link>
             </div>
         </div>
     )

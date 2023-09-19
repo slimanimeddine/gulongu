@@ -45,3 +45,8 @@ Route::get('/chapters/{id}', [ChapterController::class, 'show'])->where('id', '[
 
 // get a novel's chapters by its slug
 Route::get('/novels/{slug}/chapters', [NovelController::class, 'getNovelsChapters']);
+
+// get a novel's specific chapter
+Route::get('/novels/{novel}/chapters/{chapter}', [ChapterController::class, 'getNovelsChapter']);
+
+//get a novel's first chapter

@@ -5,6 +5,12 @@ import { Comment } from "@/components/comment";
 import { useRouter } from 'next/router'
 import { BigChevronLeftIcon, CaretDownIcon, CaretUpIcon, ChevronLeftIcon, ChevronRightIcon, PhotoIcon } from "@/components/svgIcons";
 import ChaptersSlideOver from "@/components/chaptersSlideOver";
+import { useNovelChapter } from "@/hooks/useNovelChapter";
+import { useNovel } from "@/hooks/useNovel";
+import Link from "next/link";
+import { useNovelChapters } from "@/hooks/useNovelChapters";
+import { Loading } from "@/components/loading";
+import { ServerError } from "@/components/serverError";
 
 function Pagination() {
     return (
@@ -54,103 +60,58 @@ function Pagination() {
     )
 }
 
-function createMarkup() {
+function createMarkup(markup: string) {
     return {
-        __html: `<blockquote class="postcontent restore">
- The room was devoid of any color ... except black!
- <br/>
- <br/>
- Even the rays of the evening sun were transformed into a deathly gray.
- <br/>
- <br/>
- Before the evening sun had started to set, she was already kneeling down in front of the black shrine.
- <br/>
- <br/>
- Black curtains were hung throughout. No one could see which god was being worshipped and no one could see what her face was like.
- <br/>
- <br/>
- She wore a black veil over her face. The ends of her long black robe were scattered in disarray over the floor. The only thing that leaked out were a pair of old, shriveled claw-like hands.
- <br/>
- <br/>
- Her hands were held together as she quietly recited a chant. But she was not praying for luck or good fortune. Rather, she was invoking a curse.
- <br/>
- <br/>
- She cursed the gods, cursed the world, and cursed every single thing between the heavens and earth.
- <br/>
- <br/>
- A young child clothed in black knelt motionlessly behind her. It seemed as if he had been by her side since ancient times. In fact, he appeared very much ready to kneel beside her until the end of the world.
- <br/>
- <br/>
- The evening sun shined down onto his face. His facial features were handsome and prominent, but they appeared to be made of ice from the tops of a faraway mountain.
- <br/>
- <br/>
- The setting sun was weak and insipid. The howling winds cried out.
- <br/>
- <br/>
- Suddenly, she stood up and tore apart the black curtains in front of the shrine. She took into her hands an ebony black steel coffer.
- <br/>
- <br/>
- Could it be that this was what she had been worshipping? She grasped on to the black coffer with all her might, muscles and tendons bulged out of her hands as she shook uncontrollably.
- <br/>
- <br/>
- A sabre rested on the altar. Its scabbard was ebony black. Its hilt was ebony black.
- <br/>
- <br/>
- She suddenly took the sabre and cut the steel coffer in half.
- <br/>
- <br/>
- There was nothing inside except for a heap of powdery red dust.
- <br/>
- <br/>
- She took a handful into her hand and said, "Do you know what this is?"
- <br/>
- <br/>
- Nobody would know - except for her, nobody could possibly know!
- <br/>
- <br/>
- "It is snow ... it is the red snow!"
- <br/>
- <br/>
- Her voice was sharp and bitter, like the cry of a lost soul in the wintry night.
- <br/>
- <br/>
- "When you were born, the snow that fell was red ... stained red with blood!"
- <br/>
- <br/>
- The child in black lowered his head.
- <br/>
- <br/>
- She walked up to him and sprinkled the red snow over his head.
- <br/>
- <br/>
- "You must remember that from this day forth you are a god ... the God of Revenge! No matter what you choose to do, do with no regrets. No matter how you decide to punish them, it will be deserved." A mysterious confidence surged through her voice, as if all the demons and spirits between the heavens and earth had been summoned into the specks of red dust in her hands that were being applied to the child in black. Then she lifted both her palms into the air and loudly proclaimed, "For this one moment, I've spent eighteen years, eighteen years! And now that everything has been completely prepared, why haven't you left yet?"
- <br/>
- <br/>
- The child in black lowered his head and replied, "I ..."
- <br/>
- <br/>
- She took the sabre and stabbed it down into the ground in front of him.
- <br/>
- <br/>
- "Hurry up and go! Use this sabre to sever every single one of their heads! Don't return unless you've succeeded, or else the heavens will curse you, and I will curse you as well!"
- <br/>
- <br/>
- The winds were howling.
- <br/>
- <br/>
- She watched as he slowly walked out into the darkness, his figure slowly melded into the black night.
- <br/>
- <br/>
- The sabre in his hand also slowly melded into the black night.
- <br/>
- <br/>
- The entire world was blanketed by the dark black night.
-</blockquote>
-`};
+        __html: markup
+    };
 }
 
 export default function Chapter() {
     const router = useRouter()
+    const { chapter, novel } = router.query
+    const {
+        data: dataChapter,
+    } = useNovelChapter(`${novel}`, `${chapter}`)
+
+    const {
+        data: dataNovel,
+    } = useNovel(`${novel}`)
+    // get novel chapters
+    let chapters
+
+    const {
+        data: dataChapters,
+        isLoading: isLoadingChapters,
+        isError: isErrorChapters,
+        error: errorChapters
+    } = useNovelChapters(`${novel}`)
+
+    if (dataChapters?.chapters) {
+        chapters =
+            <div className="bg-gray-100 dark:bg-stone-800 rounded-b-xl">
+                <div className="flex flex-col">
+                    {dataChapters.chapters.map(item => (
+                        <Link
+                            href={`../${novel}/${item.slug}`}
+                            className="flex flex-col border-b border-gray-400 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700"
+                            key={item.id}
+                        >
+                            <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200">{item.title}</span>
+                            <span className="text-sm text-gray-400 dark:text-gray-300">{item.created_at}</span>
+                        </Link>
+                    ))}
+
+                </div>
+            </div>
+    }
+
+    if (isLoadingChapters) {
+        chapters = <Loading />
+    }
+
+    if (isErrorChapters) {
+        chapters = <ServerError message={errorChapters?.message ?? "can't find resource"} />
+    }
 
     const [sort, setSort] = useState("top")
     const comment = {
@@ -182,23 +143,22 @@ export default function Chapter() {
     return (
         <>
             <Head>
-                <title>Unsheathed - Chapter 1: Jingzhe</title>
-                <meta property="og:title" content="A Record of a Mortal's Journey to Immortality: Immortal Realm | Gulongu" key="title" />
+                <title>{`${dataNovel?.novel.title ?? ""} - ${dataChapter?.chapter.title ?? ""}`}</title>
+                <meta property="og:title" content={`${dataNovel?.novel.title ?? ""} - ${dataChapter?.chapter.title ?? ""}`} key="title" />
             </Head>
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="w-full py-3">
                     <div className="flex justify-between items-center max-md:px-2">
                         <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => router.back()}
-                                type="button"
+                            <Link
+                                href={`../${novel}`}
                             >
                                 <BigChevronLeftIcon />
-                            </button>
+                            </Link>
                             <div className="border border-black rounded-lg">
                                 <PhotoIcon width={29} height={40} />
                             </div>
-                            <span className="font-semibold">Unsheathed</span>
+                            <span className="font-semibold">{dataNovel?.novel.title ?? ""}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <button disabled className="rounded-full border p-1 text-gray-300">
@@ -207,7 +167,7 @@ export default function Chapter() {
                             <button className="rounded-full border border-blue-500 p-1 hover:shadow-xl">
                                 <ChevronRightIcon />
                             </button>
-                            <ChaptersSlideOver />
+                            <ChaptersSlideOver chapters={chapters ?? <></>} novel={dataNovel?.novel.title ?? ""} />
                         </div>
                     </div>
                 </div>
@@ -217,9 +177,9 @@ export default function Chapter() {
             </div>
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="w-full flex flex-col gap-4 items-start py-4 max-md:px-2">
-                    <h1 className="text-2xl text-left text-gray-800 font-bold capitalize dark:text-gray-100">chapter 1: keyboard warrior</h1>
+                    <h1 className="text-2xl text-left text-gray-800 font-bold capitalize dark:text-gray-100">{dataChapter?.chapter.title ?? ""}</h1>
                     {/* markup */}
-                    <div dangerouslySetInnerHTML={createMarkup()} />
+                    <div className="leading-loose" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
                     <button className="self-center bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full text-lg font-bold text-center py-4 w-48 my-4">next chapter</button>
                 </div>
             </div>

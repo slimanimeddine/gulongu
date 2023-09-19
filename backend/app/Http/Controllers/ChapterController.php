@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chapter;
+use App\Models\Novel;
 use Illuminate\Http\Request;
 
 class ChapterController extends Controller
@@ -51,5 +52,24 @@ class ChapterController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Get novel's specific chapter
+     */
+    public function getNovelsChapter(string $novel, string $chapter)
+    {
+        //
+        $novel = Novel::firstWhere('slug', $novel);
+        $chapter = Chapter::firstWhere('slug', $chapter);
+        if ($chapter->novel_id !== $novel->id) {
+            return response()->json([
+                'message' => 'wrong novel'
+            ], 404);
+        }
+
+        return response()->json([
+            'chapter' => $chapter,
+        ], 200);
     }
 }

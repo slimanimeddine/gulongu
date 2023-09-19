@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import { Dialog, Disclosure, Transition } from '@headlessui/react'
 import { ChevronDownIcon, ChevronUpIcon, MenuIcon, PhotoIcon, XIcon } from './svgIcons'
 
-export default function ChaptersSlideOver() {
+export default function ChaptersSlideOver({ chapters, novel }: { chapters: JSX.Element, novel: string }) {
     const [isOpen, setIsOpen] = useState(false)
 
     function closeModal() {
@@ -77,7 +77,7 @@ export default function ChaptersSlideOver() {
                                                         <div className="border border-black rounded-lg">
                                                             <PhotoIcon width={29} height={40} />
                                                         </div>
-                                                        <span className="font-semibold">Unsheathed</span>
+                                                        <span className="font-semibold">{novel}</span>
                                                     </div>
                                                     <Disclosure>
                                                         {({ open }) => (
@@ -94,17 +94,8 @@ export default function ChaptersSlideOver() {
                                                                                 : <ChevronDownIcon />
                                                                         }
                                                                     </Disclosure.Button>
-                                                                    <Disclosure.Panel className="bg-gray-100 dark:bg-stone-800 rounded-b-xl">
-                                                                        <div className="flex flex-col">
-                                                                            <div className="flex flex-col border-b border-gray-400 px-4 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700">
-                                                                                <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200">chapter 1</span>
-                                                                                <span className="text-sm text-gray-400 dark:text-gray-300">2021.08.18</span>
-                                                                            </div>
-                                                                            <div className="flex flex-col border-b border-gray-400 px-4 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700">
-                                                                                <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200">chapter 1</span>
-                                                                                <span className="text-sm text-gray-400 dark:text-gray-300">2021.08.18</span>
-                                                                            </div>
-                                                                        </div>
+                                                                    <Disclosure.Panel>
+                                                                        {chapters}
                                                                     </Disclosure.Panel>
                                                                 </div>
                                                             </>

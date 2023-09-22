@@ -49,4 +49,11 @@ Route::get('/novels/{slug}/chapters', [NovelController::class, 'getNovelsChapter
 // get a novel's specific chapter
 Route::get('/novels/{novel}/chapters/{chapter}', [ChapterController::class, 'getNovelsChapter']);
 
+//get a novel's previous chapter
+Route::get('/novels/{novelSlug}/chapters/{chapterSlug}/previous', [ChapterController::class, 'getNovelsPreviousChapter']);
+
+//get a novel's next chapter
+Route::get('/novels/{novelSlug}/chapters/{chapterSlug}/next', [ChapterController::class, 'getNovelsNextChapter']);
+
 //get a novel's first chapter
+Route::get('/novels/{novelSlug}/first', [ChapterController::class, 'getNovelsFirstChapter']);

@@ -11,6 +11,8 @@ import Link from "next/link";
 import { useNovelChapters } from "@/hooks/useNovelChapters";
 import { Loading } from "@/components/loading";
 import { ServerError } from "@/components/serverError";
+import { useNovelPreviousChapter } from "@/hooks/useNovelPreviousChapter";
+import { useNovelNextChapter } from "@/hooks/useNovelNextChapter";
 
 function Pagination() {
     return (
@@ -69,22 +71,40 @@ function createMarkup(markup: string) {
 export default function Chapter() {
     const router = useRouter()
     const { chapter, novel } = router.query
+
+    // getting novel's previous chapter
+    const {
+        data: dataPreviousChapter,
+    } = useNovelPreviousChapter(`${novel}`, `${chapter}`)
+
+    // getting novel's next chapter
+    const {
+        data: dataNextChapter,
+    } = useNovelNextChapter(`${novel}`, `${chapter}`)
+
+    console.log("next chapter: ", dataNextChapter?.nextChapter)
+    console.log("previous chapter: ", dataPreviousChapter?.previousChapter)
+
+    // get chapter
     const {
         data: dataChapter,
     } = useNovelChapter(`${novel}`, `${chapter}`)
 
+    //get novel
     const {
         data: dataNovel,
     } = useNovel(`${novel}`)
-    // get novel chapters
+
+    const [enabled, setEnabled] = useState(false)
     let chapters
 
+    // get novel chapters
     const {
         data: dataChapters,
         isLoading: isLoadingChapters,
         isError: isErrorChapters,
         error: errorChapters
-    } = useNovelChapters(`${novel}`)
+    } = useNovelChapters(`${novel}`, enabled)
 
     if (dataChapters?.chapters) {
         chapters =
@@ -161,13 +181,31 @@ export default function Chapter() {
                             <span className="font-semibold">{dataNovel?.novel.title ?? ""}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button disabled className="rounded-full border p-1 text-gray-300">
-                                <ChevronLeftIcon />
-                            </button>
-                            <button className="rounded-full border border-blue-500 p-1 hover:shadow-xl">
-                                <ChevronRightIcon />
-                            </button>
-                            <ChaptersSlideOver chapters={chapters ?? <></>} novel={dataNovel?.novel.title ?? ""} />
+                            {
+                                dataPreviousChapter?.previousChapter
+                                    ? <Link
+                                        href={`../${novel}/${dataPreviousChapter.previousChapter.slug}`}
+                                        className="rounded-full border border-blue-500 p-1 hover:shadow-xl"
+                                    >
+                                        <ChevronLeftIcon />
+                                    </Link>
+                                    : <button disabled className="rounded-full border p-1 text-gray-300">
+                                        <ChevronLeftIcon />
+                                    </button>
+                            }
+                            {
+                                dataNextChapter?.nextChapter
+                                    ? <Link
+                                        href={`../${novel}/${dataNextChapter.nextChapter.slug}`}
+                                        className="rounded-full border border-blue-500 p-1 hover:shadow-xl"
+                                    >
+                                        <ChevronRightIcon />
+                                    </Link>
+                                    : <button disabled className="rounded-full border p-1 text-gray-300">
+                                        <ChevronRightIcon />
+                                    </button>
+                            }
+                            <ChaptersSlideOver chapters={chapters ?? <></>} setEnabled={setEnabled} novel={dataNovel?.novel.title ?? ""} />
                         </div>
                     </div>
                 </div>
@@ -179,8 +217,14 @@ export default function Chapter() {
                 <div className="w-full flex flex-col gap-4 items-start py-4 max-md:px-2">
                     <h1 className="text-2xl text-left text-gray-800 font-bold capitalize dark:text-gray-100">{dataChapter?.chapter.title ?? ""}</h1>
                     {/* markup */}
-                    <div className="leading-loose" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
-                    <button className="self-center bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full text-lg font-bold text-center py-4 w-48 my-4">next chapter</button>
+                    <div className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
+                    {dataNextChapter?.nextChapter.slug && <Link
+                        href={`../${novel}/${dataNextChapter.nextChapter.slug}`}
+                        className="self-center bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full text-lg font-bold text-center py-4 w-48 my-4"
+                    >
+                        next chapter
+                    </Link>}
+
                 </div>
             </div>
             <div className="flex justify-center items-center max-w-6xl m-auto">

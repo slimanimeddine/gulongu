@@ -10,6 +10,7 @@ import { Loading } from "@/components/loading";
 import { ServerError } from "@/components/serverError";
 import { useNovelChapters } from "@/hooks/useNovelChapters";
 import Link from "next/link";
+import { useNovelFirstChapter } from "@/hooks/useNovelFirstChapter";
 
 function classNames(...classes: (string | boolean)[]) {
     return classes.filter(Boolean).join(' ')
@@ -67,12 +68,13 @@ export default function Novel() {
     }
     /////////////////////////////////////////////////////////////
     const [sort, setSort] = useState("newest")
+    const [enabled, setEnabled] = useState(false)
     const router = useRouter()
     const slug = `${router.query.novel}`
 
-    // getting novel data
     let novelInfosCard
 
+    // getting novel data
     const {
         data: dataNovel,
         isLoading: isLoadingNovel,
@@ -80,12 +82,18 @@ export default function Novel() {
         error: errorNovel
     } = useNovel(slug)
 
+    // getting novel's first chapter
+    const {
+        data: dataFirstChapter,
+    } = useNovelFirstChapter(slug)
+
+    // getting novel's chapters
     const {
         data: dataChapters,
         isLoading: isLoadingChapters,
         isError: isErrorChapters,
         error: errorChapters
-    } = useNovelChapters(slug)
+    } = useNovelChapters(slug, enabled)
 
     if (dataNovel?.novel) {
         const novelData = {
@@ -97,7 +105,7 @@ export default function Novel() {
             nbReviews: 40,
             percLikes: 78,
         }
-        novelInfosCard = <NovelInfos {...novelData} reviews={reviews} firstChapterUrl={`${slug}/${dataChapters?.chapters[0].slug ?? ""}`} viewAll={false} />
+        novelInfosCard = <NovelInfos {...novelData} reviews={reviews} firstChapterUrl={`${slug}/${dataFirstChapter?.firstChapter?.slug ?? ""}`} viewAll={false} />
     }
 
     if (isLoadingNovel) {
@@ -108,7 +116,6 @@ export default function Novel() {
         novelInfosCard = <ServerError message={errorNovel?.message ?? "can't find resource"} />
     }
 
-    // get novel chapters
     let chapters: JSX.Element
 
     if (dataChapters?.chapters) {
@@ -251,7 +258,10 @@ export default function Novel() {
                                 {({ open }) => (
                                     <>
                                         <div className="w-full shadow-md shadow-slate-300 rounded-xl border dark:shadow-none dark:border-none dark:bg-stone-800">
-                                            <Disclosure.Button className="flex justify-between items-center w-full gap-3 p-4">
+                                            <Disclosure.Button
+                                                className="flex justify-between items-center w-full gap-3 p-4"
+                                                onClick={() => setEnabled(!open)}
+                                            >
                                                 <div className="flex items-center gap-2 text-lg font-semibold capitalize">
                                                     <span className="bg-gray-200 rounded-md py-1 px-3 dark:bg-stone-700">1</span>
                                                     <span>chapters</span>

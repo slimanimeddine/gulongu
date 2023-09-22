@@ -8,12 +8,16 @@ interface FilteredChapter {
     created_at: string
 }
 
-export const useNovelChapters = (slug: string) => {
-    const { data, isLoading, isError, error } = useQuery<{ chapters: FilteredChapter[] }, AxiosError>(`novels/${slug}/chapters`, () => {
-        return axios
-            .get(`/api/novels/${slug}/chapters`)
-            .then(res => res.data)
-            .then(err => err)
+export const useNovelChapters = (slug: string, enabled: boolean) => {
+    const { data, isLoading, isError, error } = useQuery<{ chapters: FilteredChapter[] }, AxiosError>({
+        queryKey: `novels/${slug}/chapters`,
+        queryFn: () => {
+            return axios
+                .get(`/api/novels/${slug}/chapters`)
+                .then(res => res.data)
+                .then(err => err)
+        },
+        enabled
     })
 
     return {

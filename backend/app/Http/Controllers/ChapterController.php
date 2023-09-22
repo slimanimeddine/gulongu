@@ -32,7 +32,7 @@ class ChapterController extends Controller
     {
         //
         $chapter = Chapter::find($id);
-        
+
         return response()->json([
             'chapter' => $chapter,
         ], 200);
@@ -61,15 +61,99 @@ class ChapterController extends Controller
     {
         //
         $novel = Novel::firstWhere('slug', $novel);
-        $chapter = Chapter::firstWhere('slug', $chapter);
-        if ($chapter->novel_id !== $novel->id) {
+        if ($novel) {
+            $chapter = Chapter::where('novel_id', $novel->id)->where('slug', $chapter)->first();
+
+            if ($chapter) {
+                return response()->json([
+                    'chapter' => $chapter,
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'chapter with given slug was not found'
+                ], 404);
+            }
+        } else {
             return response()->json([
-                'message' => 'wrong novel'
+                'message' => 'novel with given slug was not found'
             ], 404);
         }
+    }
 
-        return response()->json([
-            'chapter' => $chapter,
-        ], 200);
+    /**
+     * get a novel's previous chapters
+     */
+    public function getNovelsPreviousChapter(string $novelSlug, string $chapterSlug)
+    {
+        //
+        $novel = Novel::firstWhere('slug', $novelSlug);
+        $chapter = Chapter::where('novel_id', $novel->id)->where('slug', $chapterSlug)->first();
+        if ($chapter) {
+            // Find the previous chapter
+            $previousChapter = Chapter::where('novel_id', $novel->id)->where('id', '<', $chapter->id)->orderBy('id', 'desc')->first();
+
+            if ($previousChapter) {
+                // Do something with $previousChapter
+                return response()->json([
+                    'previousChapter' => $previousChapter,
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'previous chapter was not found'
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'chapter was not found'
+            ], 404);
+        }
+    }
+
+    /**
+     * get a novel's next chapters
+     */
+    public function getNovelsNextChapter(string $novelSlug, string $chapterSlug)
+    {
+        //
+        $novel = Novel::firstWhere('slug', $novelSlug);
+        $chapter = Chapter::where('novel_id', $novel->id)->where('slug', $chapterSlug)->first();
+        if ($chapter) {
+            // Find the previous chapter
+            $nextChapter = Chapter::where('novel_id', $novel->id)->where('id', '>', $chapter->id)->orderBy('id', 'asc')->first();
+
+            if ($nextChapter) {
+                // Do something with $nextChapter
+                return response()->json([
+                    'nextChapter' => $nextChapter,
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'next chapter was not found'
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'chapter was not found'
+            ], 404);
+        }
+    }
+
+    /**
+     * get a novel's first chapter
+     */
+    public function getNovelsFirstChapter(string $novelSlug)
+    {
+        //
+        $novel = Novel::firstWhere('slug', $novelSlug);
+        $chapter = Chapter::where('novel_id', $novel->id)->orderBy('id', 'asc')->first();
+        if ($chapter) {
+            return response()->json([
+                'firstChapter' => $chapter,
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'chapter was not found'
+            ], 404);
+        }
     }
 }

@@ -2,7 +2,15 @@ import { Fragment, useState } from 'react'
 import { Dialog, Disclosure, Transition } from '@headlessui/react'
 import { ChevronDownIcon, ChevronUpIcon, MenuIcon, PhotoIcon, XIcon } from './svgIcons'
 
-export default function ChaptersSlideOver({ chapters, novel }: { chapters: JSX.Element, novel: string }) {
+export default function ChaptersSlideOver({
+    chapters,
+    novel,
+    setEnabled
+}: {
+    chapters: JSX.Element,
+    novel: string,
+    setEnabled: React.Dispatch<React.SetStateAction<boolean>>
+}) {
     const [isOpen, setIsOpen] = useState(false)
 
     function closeModal() {
@@ -83,7 +91,10 @@ export default function ChaptersSlideOver({ chapters, novel }: { chapters: JSX.E
                                                         {({ open }) => (
                                                             <>
                                                                 <div className="w-full shadow-md shadow-slate-300 rounded-xl border dark:shadow-none dark:border-none dark:bg-stone-800">
-                                                                    <Disclosure.Button className="flex justify-between items-center w-full gap-3 p-4">
+                                                                    <Disclosure.Button
+                                                                        className="flex justify-between items-center w-full gap-3 p-4"
+                                                                        onClick={() => setEnabled(!open)}
+                                                                    >
                                                                         <div className="flex items-center gap-2 text-lg font-semibold capitalize">
                                                                             <span className="bg-gray-200 rounded-md py-1 px-3 dark:bg-stone-700">1</span>
                                                                             <span>chapters</span>

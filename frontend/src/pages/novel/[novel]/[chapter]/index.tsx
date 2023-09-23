@@ -217,14 +217,20 @@ export default function Chapter() {
                 <div className="w-full flex flex-col gap-4 items-start py-4 max-md:px-2">
                     <h1 className="text-2xl text-left text-gray-800 font-bold capitalize dark:text-gray-100">{dataChapter?.chapter.title ?? ""}</h1>
                     {/* markup */}
-                    <div className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
+                    {
+                        dataChapter?.chapter
+                            ? <div className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
+                            : <div className="self-center">
+                                <Loading />
+                            </div>
+                    }
+
                     {dataNextChapter?.nextChapter.slug && <Link
                         href={`../${novel}/${dataNextChapter.nextChapter.slug}`}
                         className="self-center bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full text-lg font-bold text-center py-4 w-48 my-4"
                     >
                         next chapter
                     </Link>}
-
                 </div>
             </div>
             <div className="flex justify-center items-center max-w-6xl m-auto">

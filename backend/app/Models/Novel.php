@@ -29,4 +29,12 @@ class Novel extends Model
     {
         return $this->hasMany(Review::class);
     }
+    public function scopeFilterByGenres($query, array $desiredGenres)
+    {
+        return $query->where(function ($query) use ($desiredGenres) {
+            foreach ($desiredGenres as $genre) {
+                $query->whereJsonContains('genres', $genre);
+            }
+        });
+    }
 }

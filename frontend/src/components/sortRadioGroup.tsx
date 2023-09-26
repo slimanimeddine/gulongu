@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { RadioGroup } from '@headlessui/react'
 
 export function SortRadioGroup() {
-    const [sort, setSort] = useState('name')
+    const [sort, setSort] = useState<"name" | "chapters" | "rating">('name')
     return (
         <RadioGroup value={sort} onChange={setSort}>
             <RadioGroup.Label className="capitalize text-lg font-semibold">sort by</RadioGroup.Label>

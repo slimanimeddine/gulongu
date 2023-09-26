@@ -57,3 +57,9 @@ Route::get('/novels/{novelSlug}/chapters/{chapterSlug}/next', [ChapterController
 
 //get a novel's first chapter
 Route::get('/novels/{novelSlug}/first', [ChapterController::class, 'getNovelsFirstChapter']);
+
+// get all novels sorted based on sortBy
+Route::get('/novels/{sortBy}/{filter}/sortorfilter', [NovelController::class, 'getNovelsSortedOrFiltered'])->whereIn('sortBy', ['name', 'chapters']);
+
+// get all genres
+Route::get('/genres', [NovelController::class, 'getGenres']);

@@ -1,22 +1,16 @@
 import { Fragment, useState } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
 import { CaretDownIcon, CaretUpIcon, XSquaredIcon, XIcon } from './svgIcons'
-
-interface Genre {
-    id: number,
-    name: string
-}
+import { useGenres } from '@/hooks/useGenres'
+import { IGenre } from '@/types/genreType'
 
 export function FilterCombobox() {
-    const genres = [
-        { id: 1, name: 'romance' },
-        { id: 2, name: 'action' },
-        { id: 3, name: 'comedy' },
-        { id: 4, name: 'fantasy' },
-        { id: 5, name: 'mystery' },
-    ]
+    const {
+        data,
+    } = useGenres()
+    const genres = data ?? []
 
-    const [selectedGenres, setSelectedGenres] = useState<Genre[]>([])
+    const [selectedGenres, setSelectedGenres] = useState<IGenre[]>([])
     const [query, setQuery] = useState('')
     const filteredGenres =
         query === ''
@@ -28,7 +22,7 @@ export function FilterCombobox() {
                     .includes(query.toLowerCase().replace(/\s+/g, ''))
             )
     return (
-        <Combobox<Genre> value={selectedGenres} onChange={setSelectedGenres} multiple>
+        <Combobox<IGenre> value={selectedGenres} onChange={setSelectedGenres} multiple>
             <>
                 <Combobox.Label className="capitalize text-lg font-semibold block">genres</Combobox.Label>
                 <div className="relative mt-3">
@@ -60,7 +54,6 @@ export function FilterCombobox() {
                                 placeholder="Select"
                                 onChange={(event) => setQuery(event.target.value)}
                             />
-
                         </div>
                         <div className="flex justify-end items-center">
                             {
@@ -82,7 +75,6 @@ export function FilterCombobox() {
                                 )}
 
                             </Combobox.Button>
-
                         </div>
                     </div>
 

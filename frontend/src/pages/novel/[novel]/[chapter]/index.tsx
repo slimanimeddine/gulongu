@@ -82,9 +82,6 @@ export default function Chapter() {
         data: dataNextChapter,
     } = useNovelNextChapter(`${novel}`, `${chapter}`)
 
-    console.log("next chapter: ", dataNextChapter?.nextChapter)
-    console.log("previous chapter: ", dataPreviousChapter?.previousChapter)
-
     // get chapter
     const {
         data: dataChapter,

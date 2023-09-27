@@ -13,6 +13,7 @@ import { Loading } from "@/components/loading";
 import { ServerError } from "@/components/serverError";
 import { useNovelPreviousChapter } from "@/hooks/useNovelPreviousChapter";
 import { useNovelNextChapter } from "@/hooks/useNovelNextChapter";
+import { AddComment } from "@/components/addComment";
 
 function Pagination() {
     return (
@@ -259,6 +260,9 @@ export default function Chapter() {
                         )}
                     </Popover>
                 </div>
+            </div>
+            <div className="flex justify-center items-center max-w-4xl mx-auto mb-5">
+                <AddComment />
             </div>
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="flex flex-col items-start gap-5 max-md:px-2">

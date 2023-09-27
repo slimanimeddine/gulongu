@@ -11,6 +11,8 @@ import { ServerError } from "@/components/serverError";
 import { useNovelChapters } from "@/hooks/useNovelChapters";
 import Link from "next/link";
 import { useNovelFirstChapter } from "@/hooks/useNovelFirstChapter";
+import { AddReview } from "@/components/addReview";
+import { AddComment } from "@/components/addComment";
 
 function classNames(...classes: (string | boolean)[]) {
     return classes.filter(Boolean).join(' ')
@@ -203,6 +205,8 @@ export default function Novel() {
                             <div className="text-start text-xl font-semibold outline-none capitalize dark:text-stone-200">
                                 Reviews
                             </div>
+                            <AddReview />
+                            <AddComment />
                             <div className="flex w-full justify-between items-center">
                                 <div className="inline-flex items-end capitalize font-medium text-3xl">
                                     <BigThumbUpIcon series={true} />

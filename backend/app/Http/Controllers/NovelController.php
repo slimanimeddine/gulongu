@@ -31,7 +31,6 @@ class NovelController extends Controller
     {
         //
         $novel = Novel::find($id);
-        $chapters = $novel->chapters;
 
         return response()->json([
             'novel' => $novel,

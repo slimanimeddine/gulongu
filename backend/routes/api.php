@@ -63,3 +63,9 @@ Route::get('/novels/{sortBy}/{filter}/sortorfilter', [NovelController::class, 'g
 
 // get all genres
 Route::get('/genres', [NovelController::class, 'getGenres']);
+
+// get novel's reviews
+Route::get('/reviews/{novelSlug}', [ReviewController::class, 'getNovelsReviews']);
+
+// get review's replies
+Route::get('/reviewReplies/{reviewId}', [ReviewReplyController::class, 'getReviewsReplies'])->where('reviewId', '[0-9]+');;

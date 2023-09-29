@@ -11,70 +11,25 @@ import { ServerError } from "@/components/serverError";
 import { useNovelChapters } from "@/hooks/useNovelChapters";
 import Link from "next/link";
 import { useNovelFirstChapter } from "@/hooks/useNovelFirstChapter";
-import { AddReview } from "@/components/addReview";
-import { AddComment } from "@/components/addComment";
+import { useNovelReviews } from "@/hooks/useNovelReviews";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime"
+dayjs.extend(relativeTime)
+// import { AddReview } from "@/components/addReview";
+// import { AddComment } from "@/components/addComment";
 
 function classNames(...classes: (string | boolean)[]) {
     return classes.filter(Boolean).join(' ')
 }
 
 export default function Novel() {
-    const novelReview = {
-        username: "Hexflex445",
-        date: "4 years ago",
-        rating: "recommended",
-        content: "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
-        likes: 44,
-        dislikes: 12,
-        replies: 5,
-        reviewReplies: [
-            {
-                username: "AFroYY",
-                date: "2 years ago",
-                content: "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected"
-            },
-            {
-                username: "AFroYY",
-                date: "2 years ago",
-                content: "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected"
-            },
-            {
-                username: "AFroYY",
-                date: "2 years ago",
-                content: "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected"
-            },
-            {
-                username: "AFroYY",
-                date: "2 years ago",
-                content: "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected"
-            },
-            {
-                username: "AFroYY",
-                date: "2 years ago",
-                content: "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected"
-            },
-        ]
-    }
-
-    const reviews = Array(5).fill(novelReview)
-
-    const novelInfos = {
-        title: "keyboard immortal",
-        rating: 77,
-        author: "gu long",
-        translator: "deathblade",
-        synopsis: "is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem",
-        nbReviews: 40,
-        percLikes: 78,
-        reviews
-    }
-    /////////////////////////////////////////////////////////////
     const [sort, setSort] = useState("newest")
     const [enabled, setEnabled] = useState(false)
     const router = useRouter()
     const slug = `${router.query.novel}`
 
     let novelInfosCard
+    let reviewsArr
 
     // getting novel data
     const {
@@ -83,6 +38,43 @@ export default function Novel() {
         isError: isErrorNovel,
         error: errorNovel
     } = useNovel(slug)
+
+    // getting novel's reviews
+    const {
+        data: dataReviews,
+        isLoading: isLoadingReviews,
+        isError: isErrorReviews,
+        error: errorReviews
+    } = useNovelReviews(slug)
+
+    let reviewsToRender
+
+    if (dataReviews?.reviews) {
+        reviewsArr = dataReviews.reviews.map(item => ({
+            reviewId: item.id,
+            username: item.authorUsername,
+            date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
+            rating: item.isRecommended === 1 ? "recommended" : "not recommended",
+            content: item.content,
+            likes: item.likes,
+            dislikes: item.dislikes,
+            replies: item.numberOfReplies,
+        }))
+        
+        reviewsToRender = reviewsArr.slice(0, 3).map((item) => (
+            <Review {...item} key={item.reviewId} />
+        ))
+    }
+    
+    if (isLoadingReviews) {
+        reviewsArr = []
+        reviewsToRender = <Loading />
+    }
+
+    if (isErrorReviews) {
+        reviewsArr = []
+        reviewsToRender = <ServerError message={errorReviews?.message ?? "can't find resource"} />
+    }
 
     // getting novel's first chapter
     const {
@@ -100,14 +92,13 @@ export default function Novel() {
     if (dataNovel?.novel) {
         const novelData = {
             title: dataNovel.novel.title,
-            rating: 77,
             author: "gu long",
             translator: dataNovel.novel.translator,
             synopsis: dataNovel.novel.synopsis,
-            nbReviews: 40,
-            percLikes: 78,
+            nbReviews: dataReviews?.reviews.length as number,
+            percLikes: ((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100,
         }
-        novelInfosCard = <NovelInfos {...novelData} reviews={reviews} firstChapterUrl={`${slug}/${dataFirstChapter?.firstChapter?.slug ?? ""}`} viewAll={false} />
+        novelInfosCard = <NovelInfos {...novelData} reviews={reviewsArr as ReviewProps[]} firstChapterUrl={`${slug}/${dataFirstChapter?.firstChapter?.slug ?? ""}`} viewAll={false} />
     }
 
     if (isLoadingNovel) {
@@ -134,7 +125,6 @@ export default function Novel() {
                             <span className="text-sm text-gray-400 dark:text-gray-300">{item.created_at}</span>
                         </Link>
                     ))}
-
                 </div>
             </div>
     }
@@ -205,24 +195,22 @@ export default function Novel() {
                             <div className="text-start text-xl font-semibold outline-none capitalize dark:text-stone-200">
                                 Reviews
                             </div>
-                            <AddReview />
-                            <AddComment />
+                            {/* <AddReview />
+                            <AddComment /> */}
                             <div className="flex w-full justify-between items-center">
                                 <div className="inline-flex items-end capitalize font-medium text-3xl">
                                     <BigThumbUpIcon series={true} />
-                                    <span className="font-bold">{novelInfos.percLikes} %</span>
-                                    <span className="capitalize text-gray-600 text-xl ml-2 font-bold dark:text-stone-200">{novelInfos.nbReviews} reviews</span>
+                                    <span className="font-bold">{dataReviews && (dataReviews?.reviews.filter(item => item.isRecommended === 1).length / dataReviews?.reviews.length) * 100} %</span>
+                                    <span className="capitalize text-gray-600 text-xl ml-2 font-bold dark:text-stone-200">{dataReviews?.reviews.length} reviews</span>
                                 </div>
                                 <ReviewsModal {...{
                                     viewAll: true,
-                                    nbReviews: novelInfos.nbReviews,
-                                    percLikes: novelInfos.percLikes,
-                                    reviews: novelInfos.reviews as ReviewProps[]
+                                    nbReviews: dataReviews?.reviews.length as number,
+                                    percLikes: ((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100,
+                                    reviews: reviewsArr as ReviewProps[]
                                 }} />
                             </div>
-                            {reviews.slice(0, 3).map((item, i) => (
-                                <Review {...item} key={i} />
-                            ))}
+                            {reviewsToRender}
                         </div>
                     </Tab.Panel>
                     <Tab.Panel className="mx-4">

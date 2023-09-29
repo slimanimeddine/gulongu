@@ -17,7 +17,7 @@ class ReviewReply extends Model
     ];
     public function review(): BelongsTo
     {
-        return $this->belongsTo(Novel::class);
+        return $this->belongsTo(Review::class);
     }
     public function user(): BelongsTo
     {

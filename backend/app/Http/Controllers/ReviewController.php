@@ -20,6 +20,8 @@ class ReviewController extends Controller
                 'isRecommended' => 'required|boolean',
                 'likes' => 'required|integer',
                 'dislikes' => 'required|integer',
+                'novelSlug' => 'required|string',
+                'numberOfReplies' => 'required|integer',
             ]);
 
             $userId = Auth::id();
@@ -32,6 +34,8 @@ class ReviewController extends Controller
                 'isRecommended' => $fields['isRecommended'],
                 'likes' => $fields['likes'],
                 'dislikes' => $fields['dislikes'],
+                'numberOfReplies' => $fields['numberOfReplies'],
+                'novelSlug' => $fields['novelSlug'],
                 'user_id' => $userId,
                 'authorUsername' => $user->username
             ]);
@@ -41,5 +45,15 @@ class ReviewController extends Controller
                 'review' => $review
             ], 200);
         }
+    }
+
+    /**
+     * get novel's reviews.
+     */
+    public function getNovelsReviews(string $novelSlug) {
+        $reviews = Review::where('novelSlug', $novelSlug)->latest()->get();
+        return response()->json([
+            "reviews" => $reviews
+        ], 200);
     }
 }

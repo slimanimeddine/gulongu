@@ -17,7 +17,9 @@ class Review extends Model
         'content',
         'likes',
         'dislikes',
-        'authorUsername'
+        'authorUsername',
+        'novelSlug',
+        'numberOfReplies'
     ];
     public function novel(): BelongsTo
     {

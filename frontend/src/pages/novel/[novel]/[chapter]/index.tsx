@@ -13,7 +13,7 @@ import { Loading } from "@/components/loading";
 import { ServerError } from "@/components/serverError";
 import { useNovelPreviousChapter } from "@/hooks/useNovelPreviousChapter";
 import { useNovelNextChapter } from "@/hooks/useNovelNextChapter";
-import { AddComment } from "@/components/addComment";
+// import { AddComment } from "@/components/addComment";
 
 function Pagination() {
     return (
@@ -114,8 +114,8 @@ export default function Chapter() {
                             className="flex flex-col border-b border-gray-400 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700"
                             key={item.id}
                         >
-                            <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200">{item.title}</span>
-                            <span className="text-sm text-gray-400 dark:text-gray-300">{item.created_at}</span>
+                            <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200 pl-3">{item.title}</span>
+                            <span className="text-sm text-gray-400 dark:text-gray-300 pl-3">{item.created_at}</span>
                         </Link>
                     ))}
 
@@ -229,6 +229,13 @@ export default function Chapter() {
                     >
                         next chapter
                     </Link>}
+                    {dataPreviousChapter?.previousChapter.slug && <Link
+                        href={`../${novel}/${dataPreviousChapter.previousChapter.slug}`}
+                        className="self-center text-gray-500 uppercase text-sm text-center underline font-medium"
+                    >
+                        previous chapter
+                    </Link>}
+
                 </div>
             </div>
             <div className="flex justify-center items-center max-w-6xl m-auto">
@@ -261,9 +268,9 @@ export default function Chapter() {
                     </Popover>
                 </div>
             </div>
-            <div className="flex justify-center items-center max-w-4xl mx-auto mb-5">
+            {/* <div className="flex justify-center items-center max-w-4xl mx-auto mb-5">
                 <AddComment />
-            </div>
+            </div> */}
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="flex flex-col items-start gap-5 max-md:px-2">
                     {comments.map((item, i) => (

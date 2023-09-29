@@ -8,7 +8,6 @@ import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, PhotoIcon, ThumbUpIco
 interface NovelInfosProps {
     imageSrc?: string,
     title: string,
-    rating: number,
     author: string,
     translator: string,
     synopsis: string,
@@ -21,7 +20,6 @@ export function NovelInfos({
     imageSrc,
     firstChapterUrl,
     title,
-    rating,
     author,
     translator,
     synopsis,
@@ -49,7 +47,7 @@ export function NovelInfos({
                 <h1 className="text-4xl font-bold capitalize">{title}</h1>
                 <div className="inline-flex items-center capitalize font-medium text-xl">
                     <ThumbUpIcon series={true} />
-                    <span className="">{rating}%</span>
+                    <span className="">{percLikes}%</span>
                 </div>
                 <div className="inline-flex items-center capitalize font-medium text-xl">
                     <ReviewsModal {...{

@@ -2,6 +2,12 @@ import Image from "next/image"
 import { Dialog, Transition, Popover } from '@headlessui/react'
 import { useState, Fragment } from "react"
 import { BigThumbUpIcon, CaretDownIcon, CaretUpIcon, ChevronDownIcon, ChevronUpIcon, DislikesIcon, LikesIcon, RepliesIcon, ThumbUpIcon, UserCircle, XIcon } from "./svgIcons"
+import { useReviewReplies } from "@/hooks/useReviewReplies"
+import dayjs from "dayjs"
+import { Loading } from "./loading"
+import { ServerError } from "./serverError"
+import relativeTime from "dayjs/plugin/relativeTime"
+dayjs.extend(relativeTime)
 
 interface ReviewReplyProps {
     imageSrc?: string,
@@ -54,7 +60,7 @@ interface ReviewRepliesModalProps {
     content: string,
     likes: number,
     dislikes: number,
-    reviewReplies: ReviewReplyProps[]
+    reviewId: number,
 }
 
 function ReviewRepliesModal({
@@ -66,7 +72,7 @@ function ReviewRepliesModal({
     content,
     likes,
     dislikes,
-    reviewReplies
+    reviewId,
 }: ReviewRepliesModalProps) {
     const [show, setShow] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
@@ -77,6 +83,38 @@ function ReviewRepliesModal({
 
     function openModal() {
         setIsOpen(true)
+    }
+
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useReviewReplies(reviewId, show)
+
+    let reviewRepliesToRender
+
+    if (data?.reviewReplies) {
+        const reviewRepliesArr = data.reviewReplies.map(item => ({
+            username: item.authorUsername,
+            date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
+            content: item.content,
+            id: item.id
+        }))
+
+
+        reviewRepliesToRender = reviewRepliesArr.map(item => {
+            const { id, ...rest } = item
+            return <ReviewReply key={id} {...rest} />
+        })
+    }
+
+    if (isLoading) {
+        reviewRepliesToRender = <Loading />
+    }
+
+    if (isError) {
+        reviewRepliesToRender = <ServerError message={error?.message ?? "can't find resource"} />
     }
 
     return (
@@ -187,11 +225,7 @@ function ReviewRepliesModal({
                                                 </div>
                                             </div>
                                         </div>
-                                        {
-                                            reviewReplies.map(item => (
-                                                <ReviewReply key={item.content} {...item} />
-                                            ))
-                                        }
+                                        {reviewRepliesToRender}
                                     </div>
                                 </Dialog.Panel>
                             </Transition.Child>
@@ -212,7 +246,7 @@ export interface ReviewProps {
     likes: number,
     dislikes: number,
     replies: number,
-    reviewReplies: ReviewReplyProps[]
+    reviewId: number
 }
 
 export function Review({
@@ -224,7 +258,7 @@ export function Review({
     likes,
     dislikes,
     replies,
-    reviewReplies
+    reviewId
 }: ReviewProps) {
     const [show, setShow] = useState(false)
 
@@ -237,7 +271,7 @@ export function Review({
         content,
         likes,
         dislikes,
-        reviewReplies
+        reviewId
     }
 
     return (
@@ -409,8 +443,7 @@ export function ReviewsModal({
                                             </Popover>
                                         </div>
                                         {reviews.map(item => (
-                                            <Review {...item} key={item.content} />
-
+                                            <Review {...item} key={item.reviewId} />
                                         ))}
                                     </div>
                                 </Dialog.Panel>

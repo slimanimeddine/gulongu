@@ -21,6 +21,8 @@ import { classNames } from "@/helpers/classNames";
 
 export default function Novel() {
     const [sort, setSort] = useState<"newest" | "oldest">("newest")
+    const [sortReviews, setSortReviews] = useState<"newest" | "oldest">("newest")
+
     const [enabled, setEnabled] = useState(false)
     const router = useRouter()
     const slug = `${router.query.novel}`
@@ -43,7 +45,7 @@ export default function Novel() {
         isLoading: isLoadingReviews,
         isError: isErrorReviews,
         error: errorReviews
-    } = useNovelReviews(slug, sort)
+    } = useNovelReviews(slug, sortReviews)
 
     let reviewsToRender
 
@@ -58,12 +60,12 @@ export default function Novel() {
             dislikes: item.dislikes,
             replies: item.numberOfReplies,
         }))
-        
+
         reviewsToRender = reviewsArr.slice(0, 3).map((item) => (
             <Review {...item} key={item.reviewId} />
         ))
     }
-    
+
     if (isLoadingReviews) {
         reviewsArr = []
         reviewsToRender = <Loading />
@@ -95,8 +97,14 @@ export default function Novel() {
             synopsis: dataNovel.novel.synopsis,
             nbReviews: dataReviews?.reviews.length as number,
             percLikes: Math.floor(((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100),
+            novelSlug: slug,
+            reviews: reviewsArr as ReviewProps[],
+            firstChapterUrl: `${slug}/${dataFirstChapter?.firstChapter?.slug ?? ""}`,
+            viewAll: false,
+            sort: sortReviews,
+            setSort: setSortReviews
         }
-        novelInfosCard = <NovelInfos {...novelData} reviews={reviewsArr as ReviewProps[]} firstChapterUrl={`${slug}/${dataFirstChapter?.firstChapter?.slug ?? ""}`} viewAll={false} />
+        novelInfosCard = <NovelInfos {...novelData} />
     }
 
     if (isLoadingNovel) {
@@ -136,10 +144,10 @@ export default function Novel() {
     }
     const addReviewProps = {
         sort,
-        novel_id: dataNovel!.novel.id!,
-        novelSlug: dataNovel!.novel.slug!,
-        user_id: user!.id!,
-        authorUsername: user!.username!
+        novel_id: dataNovel?.novel?.id,
+        novelSlug: dataNovel?.novel?.slug,
+        user_id: user?.id,
+        authorUsername: user?.username
     }
 
     return (
@@ -200,7 +208,7 @@ export default function Novel() {
                             <div className="text-start text-xl font-semibold outline-none capitalize dark:text-stone-200">
                                 Reviews
                             </div>
-                            {user?.id && <AddReview {...addReviewProps} />}                            
+                            {user?.id && <AddReview {...addReviewProps} />}
                             <div className="flex w-full justify-between items-center">
                                 <div className="inline-flex items-end capitalize font-medium text-3xl">
                                     <BigThumbUpIcon series={true} />
@@ -211,7 +219,10 @@ export default function Novel() {
                                     viewAll: true,
                                     nbReviews: dataReviews?.reviews.length as number,
                                     percLikes: Math.floor(((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100),
-                                    reviews: reviewsArr as ReviewProps[]
+                                    reviews: reviewsArr as ReviewProps[],
+                                    novelSlug: slug,
+                                    sort: sortReviews,
+                                    setSort: setSortReviews                        
                                 }} />
                             </div>
                             {reviewsToRender}
@@ -242,8 +253,12 @@ export default function Novel() {
 
                                             <Popover.Panel className="absolute z-10 right-0">
                                                 <div className="flex flex-col py-2 shadow-md justify-start bg-white w-44 rounded-md overflow-auto max-h-40 border dark:bg-[#3B3B3B] dark:border-0">
-                                                    <button onClick={() => setSort("newest")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">newest</button>
-                                                    <button onClick={() => setSort("oldest")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">oldest</button>
+                                                    <button onClick={() => {
+                                                        setSort("newest")
+                                                    }} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">newest</button>
+                                                    <button onClick={() => {
+                                                        setSort("oldest")
+                                                    }} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">oldest</button>
                                                 </div>
                                             </Popover.Panel>
                                         </>

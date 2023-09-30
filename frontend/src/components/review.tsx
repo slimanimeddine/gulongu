@@ -7,6 +7,7 @@ import dayjs from "dayjs"
 import { Loading } from "./loading"
 import { ServerError } from "./serverError"
 import relativeTime from "dayjs/plugin/relativeTime"
+import { useQueryClient } from "react-query"
 dayjs.extend(relativeTime)
 
 interface ReviewReplyProps {
@@ -101,7 +102,6 @@ function ReviewRepliesModal({
             content: item.content,
             id: item.id
         }))
-
 
         reviewRepliesToRender = reviewRepliesArr.map(item => {
             const { id, ...rest } = item
@@ -294,7 +294,7 @@ export function Review({
                     <span className="text-sm">{date}</span>
                 </div>
                 <div className="flex flex-col">
-                    <div className={rating === "recommended" ? "flex text-green-600": "flex text-red-600"}>
+                    <div className={rating === "recommended" ? "flex text-green-600" : "flex text-red-600"}>
                         <ThumbUpIcon series={true} />
                         <span className="font-bold text-md capitalize italic">{rating}</span>
                     </div>
@@ -338,14 +338,20 @@ export interface ReviewsModalProps {
     viewAll: boolean,
     nbReviews: number,
     percLikes: number,
-    reviews: ReviewProps[]
+    reviews: ReviewProps[],
+    novelSlug: string,
+    sort: "newest" | "oldest",
+    setSort: React.Dispatch<React.SetStateAction<"newest" | "oldest">>
 }
 
 export function ReviewsModal({
     viewAll,
     nbReviews,
     percLikes,
-    reviews
+    reviews,
+    novelSlug,
+    sort,
+    setSort
 }: ReviewsModalProps) {
     const [isOpen, setIsOpen] = useState(false)
 
@@ -357,7 +363,7 @@ export function ReviewsModal({
         setIsOpen(true)
     }
 
-    const [sort, setSort] = useState("newest")
+    const queryClient = useQueryClient()
 
     return (
         <>
@@ -434,8 +440,14 @@ export function ReviewsModal({
 
                                                         <Popover.Panel className="absolute z-10 right-0">
                                                             <div className="flex flex-col py-2 shadow-md justify-start bg-white w-44 rounded-md overflow-auto max-h-40 border dark:bg-[#3B3B3B] dark:border-0">
-                                                                <button onClick={() => setSort("newest")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">newest</button>
-                                                                <button onClick={() => setSort("oldest")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">oldest</button>
+                                                                <button onClick={() => {
+                                                                    setSort("newest")
+                                                                    queryClient.invalidateQueries(`/reviews/${novelSlug}/${sort}`, { exact: true })
+                                                                }} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">newest</button>
+                                                                <button onClick={() => {
+                                                                    setSort("oldest")
+                                                                    queryClient.invalidateQueries(`/reviews/${novelSlug}/${sort}`, { exact: true })
+                                                                }} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">oldest</button>
                                                             </div>
                                                         </Popover.Panel>
                                                     </>

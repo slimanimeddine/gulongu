@@ -5,9 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, Controller } from "react-hook-form"
 import { InputError } from "./inputError"
 import { useMutation, useQueryClient } from "react-query"
-import axios from "axios"
 import { useState } from "react"
 import toast from "react-hot-toast"
+import axios from "@/lib/axios"
 
 function countWords(inputString: string): number {
     const words = inputString.split(/\s+/);
@@ -107,7 +107,7 @@ export function AddReview({
     const addReviewMutation = useMutation({
         mutationFn: (props: TAddReviewSchema) => {
             return axios
-                .post('/reviews', {
+                .post('/api/reviews', {
                     content: props.content,
                     novel_id,
                     isRecommended: props.vote === 'recommended' ? 1 : 0,

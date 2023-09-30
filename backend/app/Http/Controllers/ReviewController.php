@@ -41,7 +41,6 @@ class ReviewController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'review added successfully', 
                 'review' => $review
             ], 200);
         }
@@ -50,8 +49,14 @@ class ReviewController extends Controller
     /**
      * get novel's reviews.
      */
-    public function getNovelsReviews(string $novelSlug) {
-        $reviews = Review::where('novelSlug', $novelSlug)->latest()->get();
+    public function getNovelsReviews(string $novelSlug, string $sort) {
+        if ($sort == 'newest') {
+            $reviews = Review::where('novelSlug', $novelSlug)->latest()->get();
+        }
+        if ($sort == 'oldest') {
+            $reviews = Review::where('novelSlug', $novelSlug)->oldest()->get();
+        }
+        
         return response()->json([
             "reviews" => $reviews
         ], 200);

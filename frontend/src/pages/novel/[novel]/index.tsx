@@ -15,18 +15,16 @@ import { useNovelReviews } from "@/hooks/useNovelReviews";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime"
 dayjs.extend(relativeTime)
-// import { AddReview } from "@/components/addReview";
-// import { AddComment } from "@/components/addComment";
-
-function classNames(...classes: (string | boolean)[]) {
-    return classes.filter(Boolean).join(' ')
-}
+import { AddReview } from "@/components/addReview";
+import { useUser } from "@/hooks/useUser";
+import { classNames } from "@/helpers/classNames";
 
 export default function Novel() {
-    const [sort, setSort] = useState("newest")
+    const [sort, setSort] = useState<"newest" | "oldest">("newest")
     const [enabled, setEnabled] = useState(false)
     const router = useRouter()
     const slug = `${router.query.novel}`
+    const { data: user } = useUser()
 
     let novelInfosCard
     let reviewsArr
@@ -45,7 +43,7 @@ export default function Novel() {
         isLoading: isLoadingReviews,
         isError: isErrorReviews,
         error: errorReviews
-    } = useNovelReviews(slug)
+    } = useNovelReviews(slug, sort)
 
     let reviewsToRender
 
@@ -96,7 +94,7 @@ export default function Novel() {
             translator: dataNovel.novel.translator,
             synopsis: dataNovel.novel.synopsis,
             nbReviews: dataReviews?.reviews.length as number,
-            percLikes: ((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100,
+            percLikes: Math.floor(((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100),
         }
         novelInfosCard = <NovelInfos {...novelData} reviews={reviewsArr as ReviewProps[]} firstChapterUrl={`${slug}/${dataFirstChapter?.firstChapter?.slug ?? ""}`} viewAll={false} />
     }
@@ -136,12 +134,19 @@ export default function Novel() {
     if (isErrorChapters) {
         chapters = <ServerError message={errorChapters?.message ?? "can't find resource"} />
     }
+    const addReviewProps = {
+        sort,
+        novel_id: dataNovel!.novel.id!,
+        novelSlug: dataNovel!.novel.slug!,
+        user_id: user!.id!,
+        authorUsername: user!.username!
+    }
 
     return (
         <>
             <Head>
-                <title>{`${dataNovel?.novel.title ?? ""} | Gulongu`}</title>
-                <meta property="og:title" content={`${dataNovel?.novel.title ?? ""} | Gulongu`} key="title" />
+                <title>{`${dataNovel?.novel?.title ?? ""} | Gulongu`}</title>
+                <meta property="og:title" content={`${dataNovel?.novel?.title ?? ""} | Gulongu`} key="title" />
             </Head>
             <div className="flex justify-center items-center bg-zinc-100 dark:bg-stone-800">
                 {novelInfosCard}
@@ -195,18 +200,17 @@ export default function Novel() {
                             <div className="text-start text-xl font-semibold outline-none capitalize dark:text-stone-200">
                                 Reviews
                             </div>
-                            {/* <AddReview />
-                            <AddComment /> */}
+                            {user?.id && <AddReview {...addReviewProps} />}                            
                             <div className="flex w-full justify-between items-center">
                                 <div className="inline-flex items-end capitalize font-medium text-3xl">
                                     <BigThumbUpIcon series={true} />
-                                    <span className="font-bold">{dataReviews && (dataReviews?.reviews.filter(item => item.isRecommended === 1).length / dataReviews?.reviews.length) * 100} %</span>
+                                    <span className="font-bold">{dataReviews && Math.floor((dataReviews?.reviews.filter(item => item.isRecommended === 1).length / dataReviews?.reviews.length) * 100)} %</span>
                                     <span className="capitalize text-gray-600 text-xl ml-2 font-bold dark:text-stone-200">{dataReviews?.reviews.length} reviews</span>
                                 </div>
                                 <ReviewsModal {...{
                                     viewAll: true,
                                     nbReviews: dataReviews?.reviews.length as number,
-                                    percLikes: ((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100,
+                                    percLikes: Math.floor(((dataReviews?.reviews.filter(item => item.isRecommended === 1).length as number) / (dataReviews?.reviews.length as number)) * 100),
                                     reviews: reviewsArr as ReviewProps[]
                                 }} />
                             </div>

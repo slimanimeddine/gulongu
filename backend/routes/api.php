@@ -65,7 +65,7 @@ Route::get('/novels/{sortBy}/{filter}/sortorfilter', [NovelController::class, 'g
 Route::get('/genres', [NovelController::class, 'getGenres']);
 
 // get novel's reviews
-Route::get('/reviews/{novelSlug}', [ReviewController::class, 'getNovelsReviews']);
+Route::get('/reviews/{novelSlug}/{sort}', [ReviewController::class, 'getNovelsReviews'])->whereIn('sort', ['newest', 'oldest']);
 
 // get review's replies
 Route::get('/reviewReplies/{reviewId}', [ReviewReplyController::class, 'getReviewsReplies'])->where('reviewId', '[0-9]+');;

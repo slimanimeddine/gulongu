@@ -3,10 +3,10 @@ import { IReview } from "@/types/reviewType";
 import { AxiosError } from "axios";
 import { useQuery } from "react-query"
 
-export const useNovelReviews = (novelSlug: string) => {
-    const { data, isLoading, isError, error } = useQuery<{ reviews: IReview[] }, AxiosError>(`/reviews/${novelSlug}`, () => {
+export const useNovelReviews = (novelSlug: string, sort: string) => {
+    const { data, isLoading, isError, error } = useQuery<{ reviews: IReview[] }, AxiosError>(`/reviews/${novelSlug}/${sort}`, () => {
         return axios
-            .get(`/api/reviews/${novelSlug}`)
+            .get(`/api/reviews/${novelSlug}/${sort}`)
             .then(res => res.data)
             .then(err => err)
     })

@@ -294,7 +294,7 @@ export function Review({
                     <span className="text-sm">{date}</span>
                 </div>
                 <div className="flex flex-col">
-                    <div className="flex">
+                    <div className={rating === "recommended" ? "flex text-green-600": "flex text-red-600"}>
                         <ThumbUpIcon series={true} />
                         <span className="font-bold text-md capitalize italic">{rating}</span>
                     </div>

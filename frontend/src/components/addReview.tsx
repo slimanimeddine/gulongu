@@ -1,10 +1,43 @@
+import { useNovel } from "@/hooks/useNovel"
+import { RadioGroup } from '@headlessui/react'
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm, Controller } from "react-hook-form"
+import { InputError } from "./inputError"
+import { useMutation, useQueryClient } from "react-query"
+import axios from "axios"
 import { useState } from "react"
+import toast from "react-hot-toast"
 
-function Like() {
+function countWords(inputString: string): number {
+    const words = inputString.split(/\s+/);
+    const nonEmptyWords = words.filter(word => word.trim() !== '');
+    return nonEmptyWords.length;
+}
+
+export const addReviewSchema = z.object({
+    vote: z.enum(["recommended", "notRecommended"]),
+    content: z.string({
+        required_error: "review content is required",
+    })
+}).refine(val => countWords(val.content) > 99, {
+    message: "a review must have atleast 100 words"
+})
+
+export type TAddReviewSchema = z.infer<typeof addReviewSchema>
+
+export const addReviewSchemaServerErrors = z.object({
+    vote: z.string().array().optional(),
+    content: z.string().array().optional()
+})
+
+export type TAddReviewSchemaServerErrors = z.infer<typeof addReviewSchema>
+
+function Like({ checked }: { checked: boolean }) {
     return (
         <button
             type="button"
-            className="inline-flex rounded-full p-3 bg-gray-200 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/5"
+            className={checked ? "inline-flex rounded-full p-3 bg-green-600" : "inline-flex rounded-full p-3 bg-gray-200 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/5"}
         >
             <svg
                 width={20}
@@ -12,7 +45,7 @@ function Like() {
                 viewBox="0 0 20 20"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8 text-gray-600"
+                className={checked ? "h-8 w-8 text-white" : "h-8 w-8 text-gray-600"}
             >
                 <path
                     fillRule="evenodd"
@@ -25,11 +58,11 @@ function Like() {
     )
 }
 
-function Dislike() {
+function Dislike({ checked }: { checked: boolean }) {
     return (
         <button
             type="button"
-            className="inline-flex rounded-full p-3 bg-gray-200 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/5"
+            className={checked ? "inline-flex rounded-full p-3 bg-red-600" : "inline-flex rounded-full p-3 bg-gray-200 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/5"}
         >
             <svg
                 width={20}
@@ -37,7 +70,7 @@ function Dislike() {
                 viewBox="0 0 20 20"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8 text-gray-600 rotate-180"
+                className={checked ? "h-8 w-8 text-white rotate-180" : "h-8 w-8 text-gray-600 rotate-180"}
             >
                 <path
                     fillRule="evenodd"
@@ -47,34 +80,149 @@ function Dislike() {
                 />
             </svg>
         </button>
-
     )
 }
 
-export function AddReview() {
-    const [submit, setSubmit] = useState(true)
+export function AddReview({
+    sort,
+    novel_id,
+    novelSlug,
+    user_id,
+    authorUsername
+}: {
+    sort: "newest" | "oldest",
+    novel_id: number,
+    novelSlug: string,
+    user_id: number,
+    authorUsername: string
+}) {
+    const {
+        data: dataNovel,
+    } = useNovel(novelSlug)
+
+    const [serverErrors, setServerErrors] = useState<TAddReviewSchemaServerErrors>()
+
+    const queryClient = useQueryClient()
+
+    const addReviewMutation = useMutation({
+        mutationFn: (props: TAddReviewSchema) => {
+            return axios
+                .post('/reviews', {
+                    content: props.content,
+                    novel_id,
+                    isRecommended: props.vote === 'recommended' ? 1 : 0,
+                    likes: 0,
+                    dislikes: 0,
+                    numberOfReplies: 0,
+                    novelSlug,
+                    user_id,
+                    authorUsername
+                })
+                .then()
+                .catch(error => {
+                    setServerErrors(error.response.data.errors)
+                })
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [`/reviews/${novelSlug}/${sort}`] })
+        }
+    })
+
+    const {
+        control,
+        watch,
+        register,
+        handleSubmit,
+        formState: {
+            errors,
+            isSubmitting,
+            isDirty,
+            isValid
+        },
+        reset,
+        setError,
+    } = useForm<TAddReviewSchema>({
+        resolver: zodResolver(addReviewSchema)
+    })
+
+    const content = watch("content")
+
+    const onSubmit = async (data: TAddReviewSchema) => {
+        addReviewMutation.mutate(data)
+
+        if (serverErrors) {
+            if (serverErrors.vote) {
+                setError("vote", {
+                    type: "server",
+                    message: serverErrors.vote[0]
+                });
+            }
+            if (serverErrors.content) {
+                setError("content", {
+                    type: "server",
+                    message: serverErrors.content[0]
+                });
+            }
+        } else {
+            toast.success('Review added successfully!')
+            reset()
+        }
+    }
+
     return (
-        <div className="flex flex-col text-center gap-2 p-6 shadow-md shadow-slate-300 rounded-lg border w-full">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col text-center gap-2 p-6 shadow-md shadow-slate-300 rounded-lg border w-full">
             <span className="font-medium text-gray-800 text-sm dark:text-gray-400">Write a review</span>
-            <span className="font-semibold text-lg">Enjoy Nine Star Hegemon Body Art?</span>
+            <span className="font-semibold text-lg">{`Enjoy ${dataNovel?.novel?.title ?? ""} ?`}</span>
             <div className="flex justify-center items-center">
-                <div className="flex justify-start items-center gap-6">
-                    <Like />
-                    <Dislike />
-                </div>
+                <Controller
+                    name="vote"
+                    control={control}
+                    render={({ field }) => (
+                        <RadioGroup
+                            className="flex justify-start items-center gap-6"
+                            value={field.value}
+                            onChange={field.onChange}
+                        >
+                            <RadioGroup.Option value="recommended">
+                                {({ checked }) => (
+                                    <Like checked={checked} />
+                                )}
+                            </RadioGroup.Option>
+                            <RadioGroup.Option value="notRecommended">
+                                {({ checked }) => (
+                                    <Dislike checked={checked} />
+                                )}
+                            </RadioGroup.Option>
+                        </RadioGroup>
+                    )}
+                />
             </div>
+            <div className="font-medium">
+                <InputError
+                    error={errors.vote}
+                    message={errors?.vote?.message}
+                />
+            </div>
+
             <textarea
-                name="content"
-                id=""
+                {...register("content")}
                 placeholder="Add a Review"
                 className="w-full outline-none rounded-md bg-gray-200 p-2 mt-2 border border-gray-200 dark:border-white/10 dark:bg-white/10 hover:border-blue-500 dark:hover:border-blue-500"
             >
             </textarea>
-            <span className="font-medium text-left text-gray-600 text-sm dark:text-gray-400">0 Words</span>
-            <span className="font-medium text-left text-red-600 text-sm">Reviews must have a minimum of 100 words</span>
+            <span className="font-medium text-left text-gray-600 text-sm dark:text-gray-400">{`${content ? countWords(content) : "0"} words`}</span>
+            <div className="font-medium text-left">
+                <InputError
+                    error={errors.content}
+                    message={errors?.content?.message}
+                />
+            </div>
+
+            {/* <span className="font-medium text-left text-red-600 text-sm">Reviews must have a minimum of 100 words</span> */}
             <button
                 className="bg-gray-300 rounded-full py-1 px-3 text-sm font-semibold text-gray-600 place-self-end"
-                style={submit
+                disabled={isSubmitting || !isDirty || !isValid}
+                style={!(isSubmitting || !isDirty || !isValid)
                     ? {
                         backgroundColor: "rgb(29 78 216)",
                         color: "white"
@@ -84,6 +232,6 @@ export function AddReview() {
             >
                 Submit
             </button>
-        </div>
+        </form>
     )
 }

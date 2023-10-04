@@ -8,6 +8,11 @@ import { Loading } from "./loading"
 import { ServerError } from "./serverError"
 import relativeTime from "dayjs/plugin/relativeTime"
 import { useQueryClient } from "react-query"
+import { AddReviewReply } from "./addReviewReply"
+import { useUser } from "@/hooks/useUser"
+import { useRedirect } from "@/hooks/useRedirect"
+import { useReviewLike } from "@/hooks/useReviewLike"
+import { useReviewDislike } from "@/hooks/useReviewDislike"
 dayjs.extend(relativeTime)
 
 interface ReviewReplyProps {
@@ -42,11 +47,9 @@ function ReviewReply({
                     <span className="font-bold text-md">{username}</span>
                     <span className="text-sm">{date}</span>
                 </div>
-                <div className="flex flex-col">
-                    <p className="p-4 rounded-md bg-gray-100 dark:bg-stone-500">
-                        {content}
-                    </p>
-                </div>
+                <p className="p-4 rounded-md bg-gray-100 dark:bg-stone-500 w-full">
+                    {content}
+                </p>
             </div>
         </div>
     )
@@ -75,6 +78,10 @@ function ReviewRepliesModal({
     dislikes,
     reviewId,
 }: ReviewRepliesModalProps) {
+    const { redirectTo } = useRedirect()
+    const reviewLike = useReviewLike(reviewId)
+    const reviewDislike = useReviewDislike(reviewId)
+    const { data: user } = useUser()
     const [show, setShow] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
 
@@ -91,17 +98,18 @@ function ReviewRepliesModal({
         isLoading,
         isError,
         error
-    } = useReviewReplies(reviewId, show)
+    } = useReviewReplies(reviewId, isOpen)
 
     let reviewRepliesToRender
 
     if (data?.reviewReplies) {
-        const reviewRepliesArr = data.reviewReplies.map(item => ({
+        const reviewRepliesArr = data?.reviewReplies?.map(item => ({
             username: item.authorUsername,
             date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
             content: item.content,
             id: item.id
         }))
+
 
         reviewRepliesToRender = reviewRepliesArr.map(item => {
             const { id, ...rest } = item
@@ -115,6 +123,24 @@ function ReviewRepliesModal({
 
     if (isError) {
         reviewRepliesToRender = <ServerError message={error?.message ?? "can't find resource"} />
+    }
+
+    const addReviewReplyProps = {
+        review_id: reviewId,
+    }
+
+    const likeReview = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        reviewLike.mutate()
+    }
+
+    const dislikeReview = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        reviewDislike.mutate()
     }
 
     return (
@@ -208,11 +234,17 @@ function ReviewRepliesModal({
                                                     }
                                                 </div>
                                                 <div className="flex gap-2 text-gray-600 dark:text-stone-200">
-                                                    <button className="flex hover:text-blue-500">
+                                                    <button
+                                                        className="flex hover:text-blue-500"
+                                                        onClick={likeReview}
+                                                    >
                                                         <LikesIcon />
                                                         <span>{likes}</span>
                                                     </button>
-                                                    <button className="flex hover:text-blue-500">
+                                                    <button
+                                                        className="flex hover:text-blue-500"
+                                                        onClick={dislikeReview}
+                                                    >
                                                         <DislikesIcon />
                                                         <span>{dislikes}</span>
                                                     </button>
@@ -225,6 +257,7 @@ function ReviewRepliesModal({
                                                 </div>
                                             </div>
                                         </div>
+                                        {user?.id && <AddReviewReply {...addReviewReplyProps} />}
                                         {reviewRepliesToRender}
                                     </div>
                                 </Dialog.Panel>
@@ -246,7 +279,8 @@ export interface ReviewProps {
     likes: number,
     dislikes: number,
     replies: number,
-    reviewId: number
+    reviewId: number,
+    user_id: number
 }
 
 export function Review({
@@ -258,9 +292,14 @@ export function Review({
     likes,
     dislikes,
     replies,
-    reviewId
+    reviewId,
+    user_id
 }: ReviewProps) {
     const [show, setShow] = useState(false)
+    const { redirectTo } = useRedirect()
+    const reviewLike = useReviewLike(reviewId)
+    const reviewDislike = useReviewDislike(reviewId)
+    const { data: user } = useUser()
 
     const reviewRepliesProps = {
         replies,
@@ -271,7 +310,22 @@ export function Review({
         content,
         likes,
         dislikes,
-        reviewId
+        reviewId,
+        user_id
+    }
+
+    const likeReview = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        reviewLike.mutate()
+    }
+
+    const dislikeReview = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        reviewDislike.mutate()
     }
 
     return (
@@ -319,11 +373,17 @@ export function Review({
                     }
                 </div>
                 <div className="flex gap-2 text-gray-600 dark:text-stone-200">
-                    <button className="flex hover:text-blue-500">
+                    <button
+                        className="flex hover:text-blue-500"
+                        onClick={likeReview}
+                    >
                         <LikesIcon />
                         <span>{likes}</span>
                     </button>
-                    <button className="flex hover:text-blue-500">
+                    <button
+                        className="flex hover:text-blue-500"
+                        onClick={dislikeReview}
+                    >
                         <DislikesIcon />
                         <span>{dislikes}</span>
                     </button>

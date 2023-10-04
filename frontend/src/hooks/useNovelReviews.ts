@@ -4,7 +4,7 @@ import { AxiosError } from "axios";
 import { useQuery } from "react-query"
 
 export const useNovelReviews = (novelSlug: string, sort: string) => {
-    const { data, isLoading, isError, error } = useQuery<{ reviews: IReview[] }, AxiosError>(`/reviews/${novelSlug}/${sort}`, () => {
+    const { data, isLoading, isError, error } = useQuery<{ reviews: IReview[] }, AxiosError>(['reviews', novelSlug], () => {
         return axios
             .get(`/api/reviews/${novelSlug}/${sort}`)
             .then(res => res.data)

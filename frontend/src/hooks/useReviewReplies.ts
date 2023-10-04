@@ -5,7 +5,7 @@ import { useQuery } from "react-query"
 
 export const useReviewReplies = (reviewId: number, enabled: boolean) => {
     const { data, isLoading, isError, error } = useQuery<{ reviewReplies: IReviewReply[] }, AxiosError>({
-        queryKey: `/reviews/${reviewId}`,
+        queryKey: `/reviewReplies/${reviewId}`,
         queryFn: () => {
             return axios
                 .get(`/api/reviewReplies/${reviewId}`)

@@ -49,16 +49,37 @@ class ReviewController extends Controller
     /**
      * get novel's reviews.
      */
-    public function getNovelsReviews(string $novelSlug, string $sort) {
+    public function getNovelsReviews(string $novelSlug, string $sort)
+    {
         if ($sort == 'newest') {
             $reviews = Review::where('novelSlug', $novelSlug)->latest()->get();
         }
         if ($sort == 'oldest') {
             $reviews = Review::where('novelSlug', $novelSlug)->oldest()->get();
         }
-        
+
         return response()->json([
             "reviews" => $reviews
         ], 200);
+    }
+
+    /**
+     * add a like to a review
+     */
+    public function likeReview(string $reviewId)
+    {
+        if (Auth::check()) {
+            Review::where('id', $reviewId)->increment('likes');
+        }
+    }
+
+    /**
+     * add a dislike to a review
+     */
+    public function dislikeReview(string $reviewId)
+    {
+        if (Auth::check()) {
+            Review::where('id', $reviewId)->increment('dislikes');
+        }
     }
 }

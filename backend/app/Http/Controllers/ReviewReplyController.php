@@ -35,8 +35,7 @@ class ReviewReplyController extends Controller
             Review::where('id', $reviewId)->increment('numberOfReplies');
 
             return response()->json([
-                'message' => 'review reply added successfully',
-                'review' => $reviewReply
+                'reviewReply' => $reviewReply
             ], 200);
         }
     }
@@ -45,10 +44,8 @@ class ReviewReplyController extends Controller
      */
     public function getReviewsReplies(string $reviewId)
     {
-        $review = Review::find($reviewId);
-        $reviewReplies = $review->reviewReplies();
         return response()->json([
-            'reviewReplies' => $reviewReplies
-        ], 200);
+            'reviewReplies' => ReviewReply::where('review_id', $reviewId)->get()
+        ]);
     }
 }

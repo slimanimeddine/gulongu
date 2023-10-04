@@ -35,7 +35,7 @@ export function UserDropdown() {
                                         className="flex justify-start items-center gap-2 mt-2 text-gray-600 text-left font-semibold pl-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600 dark:text-gray-300"
                                     >
                                         <UserCircle />
-                                        <span>slimanimeddine</span>
+                                        <span>{user.username}</span>
                                     </div>
                                     <Link
                                         href="/profile"

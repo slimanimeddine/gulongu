@@ -1,4 +1,3 @@
-import { useNovel } from "@/hooks/useNovel"
 import { RadioGroup } from '@headlessui/react'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -84,22 +83,14 @@ function Dislike({ checked }: { checked: boolean }) {
 }
 
 export function AddReview({
-    sort,
     novel_id,
     novelSlug,
-    user_id,
-    authorUsername
+    novelTitle
 }: {
-    sort: "newest" | "oldest",
     novel_id: number,
     novelSlug: string,
-    user_id: number,
-    authorUsername: string
+    novelTitle: string,
 }) {
-    const {
-        data: dataNovel,
-    } = useNovel(novelSlug)
-
     const [serverErrors, setServerErrors] = useState<TAddReviewSchemaServerErrors>()
 
     const queryClient = useQueryClient()
@@ -115,8 +106,6 @@ export function AddReview({
                     dislikes: 0,
                     numberOfReplies: 0,
                     novelSlug,
-                    user_id,
-                    authorUsername
                 })
                 .then()
                 .catch(error => {
@@ -124,7 +113,7 @@ export function AddReview({
                 })
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [`/reviews/${novelSlug}/${sort}`] })
+            queryClient.invalidateQueries({ queryKey: ['reviews', novelSlug], exact: true })
         }
     })
 
@@ -172,7 +161,7 @@ export function AddReview({
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col text-center gap-2 p-6 shadow-md shadow-slate-300 rounded-lg border w-full">
             <span className="font-medium text-gray-800 text-sm dark:text-gray-400">Write a review</span>
-            <span className="font-semibold text-lg">{`Enjoy ${dataNovel?.novel?.title ?? ""} ?`}</span>
+            <span className="font-semibold text-lg">{`Enjoy ${novelTitle} ?`}</span>
             <div className="flex justify-center items-center">
                 <Controller
                     name="vote"
@@ -217,8 +206,6 @@ export function AddReview({
                     message={errors?.content?.message}
                 />
             </div>
-
-            {/* <span className="font-medium text-left text-red-600 text-sm">Reviews must have a minimum of 100 words</span> */}
             <button
                 className="bg-gray-300 rounded-full py-1 px-3 text-sm font-semibold text-gray-600 place-self-end"
                 disabled={isSubmitting || !isDirty || !isValid}

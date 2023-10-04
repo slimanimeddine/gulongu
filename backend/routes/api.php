@@ -68,4 +68,10 @@ Route::get('/genres', [NovelController::class, 'getGenres']);
 Route::get('/reviews/{novelSlug}/{sort}', [ReviewController::class, 'getNovelsReviews'])->whereIn('sort', ['newest', 'oldest']);
 
 // get review's replies
-Route::get('/reviewReplies/{reviewId}', [ReviewReplyController::class, 'getReviewsReplies'])->where('reviewId', '[0-9]+');;
+Route::get('/reviewReplies/{reviewId}', [ReviewReplyController::class, 'getReviewsReplies'])->where('reviewId', '[0-9]+');
+
+// add a like to a review
+Route::middleware('auth:sanctum')->put('/reviews/{reviewId}/like', [ReviewController::class, 'likeReview'])->where('reviewId', '[0-9]+');
+
+// add a dislike to a review
+Route::middleware('auth:sanctum')->put('/reviews/{reviewId}/dislike', [ReviewController::class, 'dislikeReview'])->where('reviewId', '[0-9]+');

@@ -59,6 +59,7 @@ export default function Novel() {
             likes: item.likes,
             dislikes: item.dislikes,
             replies: item.numberOfReplies,
+            user_id: user?.id as number
         }))
 
         reviewsToRender = reviewsArr.slice(0, 3).map((item) => (
@@ -143,11 +144,9 @@ export default function Novel() {
         chapters = <ServerError message={errorChapters?.message ?? "can't find resource"} />
     }
     const addReviewProps = {
-        sort,
-        novel_id: dataNovel?.novel?.id,
-        novelSlug: dataNovel?.novel?.slug,
-        user_id: user?.id,
-        authorUsername: user?.username
+        novel_id: dataNovel?.novel?.id as number,
+        novelSlug: dataNovel?.novel?.slug as string,
+        novelTitle: dataNovel?.novel?.title as string
     }
 
     return (

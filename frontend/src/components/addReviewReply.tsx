@@ -43,6 +43,7 @@ export function AddReviewReply({
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [`/reviewReplies/${review_id}`] })
+            queryClient.invalidateQueries({ queryKey: ['reviews'] })
         }
     })
 

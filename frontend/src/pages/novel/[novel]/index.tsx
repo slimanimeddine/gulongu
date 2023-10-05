@@ -143,6 +143,7 @@ export default function Novel() {
     if (isErrorChapters) {
         chapters = <ServerError message={errorChapters?.message ?? "can't find resource"} />
     }
+
     const addReviewProps = {
         novel_id: dataNovel?.novel?.id as number,
         novelSlug: dataNovel?.novel?.slug as string,

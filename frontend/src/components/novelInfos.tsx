@@ -4,7 +4,6 @@ import Image from "next/image"
 import { ReviewsModal, type ReviewsModalProps } from "./review"
 import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, PhotoIcon, ThumbUpIcon } from "./svgIcons"
 
-
 interface NovelInfosProps {
     imageSrc?: string,
     title: string,

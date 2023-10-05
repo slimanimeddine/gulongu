@@ -425,6 +425,16 @@ export function ReviewsModal({
 
     const queryClient = useQueryClient()
 
+    const getNewestReviews = () => {
+        setSort("newest")
+        queryClient.invalidateQueries(['reviews', novelSlug], { exact: true })
+    }
+
+    const getOldestReviews = () => {
+        setSort("oldest")
+        queryClient.invalidateQueries(['reviews', novelSlug], { exact: true })
+    }
+
     return (
         <>
             {
@@ -500,14 +510,8 @@ export function ReviewsModal({
 
                                                         <Popover.Panel className="absolute z-10 right-0">
                                                             <div className="flex flex-col py-2 shadow-md justify-start bg-white w-44 rounded-md overflow-auto max-h-40 border dark:bg-[#3B3B3B] dark:border-0">
-                                                                <button onClick={() => {
-                                                                    setSort("newest")
-                                                                    queryClient.invalidateQueries(`/reviews/${novelSlug}/${sort}`, { exact: true })
-                                                                }} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">newest</button>
-                                                                <button onClick={() => {
-                                                                    setSort("oldest")
-                                                                    queryClient.invalidateQueries(`/reviews/${novelSlug}/${sort}`, { exact: true })
-                                                                }} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">oldest</button>
+                                                                <button onClick={getNewestReviews} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">newest</button>
+                                                                <button onClick={getOldestReviews} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">oldest</button>
                                                             </div>
                                                         </Popover.Panel>
                                                     </>

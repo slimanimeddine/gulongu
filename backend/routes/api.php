@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ChapterController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentReplyController;
 use App\Http\Controllers\NovelController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewReplyController;
@@ -22,11 +24,6 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// add a review
-Route::middleware('auth:sanctum')->post('/reviews', [ReviewController::class, 'store']);
-
-// add a review reply
-Route::middleware('auth:sanctum')->post('/reviewReplies', [ReviewReplyController::class, 'store']);
 
 // get all novels
 Route::get('/novels', [NovelController::class, 'index']);
@@ -64,6 +61,12 @@ Route::get('/novels/{sortBy}/{filter}/sortorfilter', [NovelController::class, 'g
 // get all genres
 Route::get('/genres', [NovelController::class, 'getGenres']);
 
+// add a review
+Route::middleware('auth:sanctum')->post('/reviews', [ReviewController::class, 'store']);
+
+// add a review reply
+Route::middleware('auth:sanctum')->post('/reviewReplies', [ReviewReplyController::class, 'store']);
+
 // get novel's reviews
 Route::get('/reviews/{novelSlug}/{sort}', [ReviewController::class, 'getNovelsReviews'])->whereIn('sort', ['newest', 'oldest']);
 
@@ -75,3 +78,27 @@ Route::middleware('auth:sanctum')->put('/reviews/{reviewId}/like', [ReviewContro
 
 // add a dislike to a review
 Route::middleware('auth:sanctum')->put('/reviews/{reviewId}/dislike', [ReviewController::class, 'dislikeReview'])->where('reviewId', '[0-9]+');
+
+// add a comment
+Route::middleware('auth:sanctum')->post('/comments', [CommentController::class, 'store']);
+
+// add a comment reply
+Route::middleware('auth:sanctum')->post('/commentReplies', [CommentReplyController::class, 'store']);
+
+// get chapter's comments
+Route::get('/comments/{chapterSlug}/{sort}', [CommentController::class, 'getChaptersComments'])->whereIn('sort', ['new', 'old', 'top']);
+
+// get comment's replies
+Route::get('/commentReplies/{commentId}', [CommentReplyController::class, 'getCommentsReplies'])->where('commentId', '[0-9]+');
+
+// add a like to a comment
+Route::middleware('auth:sanctum')->put('/comments/{commentId}/like', [CommentController::class, 'likeComment'])->where('commentId', '[0-9]+');
+
+// add a dislike to a comment
+Route::middleware('auth:sanctum')->put('/comments/{commentId}/dislike', [CommentController::class, 'dislikeComment'])->where('commentId', '[0-9]+');
+
+// add a like to a comment reply
+Route::middleware('auth:sanctum')->put('/commentReplies/{commentReplyId}/like', [CommentReplyController::class, 'likeCommentReply'])->where('commentReplyId', '[0-9]+');
+
+// add a dislike to a comment reply
+Route::middleware('auth:sanctum')->put('/commentsReplies/{commentReplyId}/dislike', [CommentReplyController::class, 'dislikeCommentReply'])->where('commentReplyId', '[0-9]+');

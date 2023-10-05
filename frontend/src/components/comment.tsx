@@ -1,6 +1,19 @@
 import Image from "next/image"
 import { useState } from "react"
 import { ChevronDownIcon, ChevronUpIcon, DislikesIcon, LikesIcon, UserCircle } from "./svgIcons"
+import { useUser } from "@/hooks/useUser"
+import { AddCommentReply } from "./addCommentReply"
+import { useCommentReplies } from "@/hooks/useCommentReplies"
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime"
+import { Loading } from "./loading"
+import { ServerError } from "./serverError"
+import { useCommentLike } from "@/hooks/useCommentLike"
+import { useCommentDislike } from "@/hooks/useCommentDislike"
+import { useRedirect } from "@/hooks/useRedirect"
+import { useCommentReplyDislike } from "@/hooks/useCommentReplyDislike"
+import { useCommentReplyLike } from "@/hooks/useCommentReplyLike"
+dayjs.extend(relativeTime)
 
 interface CommentProps {
     imageSrc?: string,
@@ -9,7 +22,7 @@ interface CommentProps {
     content: string,
     likes: number,
     dislikes: number,
-    commentReplies: CommentReplyProps[]
+    comment_id: number
 }
 
 interface CommentReplyProps {
@@ -18,7 +31,8 @@ interface CommentReplyProps {
     date: string,
     content: string,
     likes: number,
-    dislikes: number
+    dislikes: number,
+    commentReply_id: number
 }
 
 function CommentReply({
@@ -27,8 +41,28 @@ function CommentReply({
     date,
     content,
     likes,
-    dislikes
+    dislikes,
+    commentReply_id
 }: CommentReplyProps) {
+    const commentReplyLike = useCommentReplyLike(commentReply_id)
+    const commentReplyDislike = useCommentReplyDislike(commentReply_id)
+    const { redirectTo } = useRedirect()
+    const { data: user } = useUser()
+
+    const likeCommentReply = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        commentReplyLike.mutate()
+    }
+
+    const dislikeCommentReply = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        commentReplyDislike.mutate()
+    }
+
     return (
         <div className="flex gap-3 rounded-xl">
             {
@@ -55,11 +89,17 @@ function CommentReply({
                     </p>
                 </div>
                 <div className="flex gap-2 text-gray-600 dark:text-stone-200">
-                    <button className="flex hover:text-blue-500">
+                    <button
+                        className="flex hover:text-blue-500"
+                        onClick={likeCommentReply}
+                    >
                         <LikesIcon />
                         <span>{likes}</span>
                     </button>
-                    <button className="flex hover:text-blue-500">
+                    <button
+                        className="flex hover:text-blue-500"
+                        onClick={dislikeCommentReply}
+                    >
                         <DislikesIcon />
                         <span>{dislikes}</span>
                     </button>
@@ -76,10 +116,62 @@ export function Comment({
     content,
     likes,
     dislikes,
-    commentReplies
+    comment_id
 }: CommentProps) {
     const [show, setShow] = useState(false)
+    const { redirectTo } = useRedirect()
+    const commentLike = useCommentLike(comment_id)
+    const commentDislike = useCommentDislike(comment_id)
+    const { data: user } = useUser()
+    const [reply, setReply] = useState(false)
     const [viewReplies, setViewReplies] = useState(false)
+
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useCommentReplies(comment_id, viewReplies)
+
+    let commentRepliesToRender
+
+    if (data?.commentReplies) {
+        const reviewRepliesArr = data?.commentReplies?.map(item => ({
+            username: item.authorUsername,
+            date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
+            content: item.content,
+            likes: item.likes,
+            dislikes: item.dislikes,
+            commentReply_id: item.id
+        }))
+
+
+        commentRepliesToRender = reviewRepliesArr.map(item => (<CommentReply key={item.commentReply_id} {...item} />))
+    }
+
+    if (isLoading) {
+        commentRepliesToRender = <Loading />
+    }
+
+    if (isError) {
+        commentRepliesToRender = <ServerError message={error?.message ?? "can't find resource"} />
+    }
+
+    const likeComment = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        commentLike.mutate()
+    }
+
+    const dislikeComment = () => {
+        if (!user?.id) {
+            redirectTo('/login')
+        }
+        commentDislike.mutate()
+    }
+
+
     return (
         <div className="flex gap-3 rounded-xl">
             {
@@ -122,14 +214,24 @@ export function Comment({
                     }
                 </div>
                 <div className="flex gap-2 text-gray-600 dark:text-stone-200">
-                    <button className="flex hover:text-blue-500">
+                    <button
+                        className="flex hover:text-blue-500"
+                        onClick={likeComment}
+                    >
                         <LikesIcon />
                         <span>{likes}</span>
                     </button>
-                    <button className="flex hover:text-blue-500">
+                    <button
+                        className="flex hover:text-blue-500"
+                        onClick={dislikeComment}
+                    >
                         <DislikesIcon />
                         <span>{dislikes}</span>
                     </button>
+                    {user?.id && <button onClick={() => setReply(!reply)} className="font-medium hover:text-blue-500">Reply</button>}
+                </div>
+                <div className="my-2 w-full">
+                    {reply && <AddCommentReply comment_id={comment_id} />}
                 </div>
                 {
                     viewReplies ?
@@ -150,11 +252,7 @@ export function Comment({
                     viewReplies && (
                         <>
                             <div className="flex flex-col gap-2">
-                                {
-                                    commentReplies.map(item => (
-                                        <CommentReply {...item} key={item.content} />
-                                    ))
-                                }
+                                {commentRepliesToRender}
                             </div>
                         </>
                     )

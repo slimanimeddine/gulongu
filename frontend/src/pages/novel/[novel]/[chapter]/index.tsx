@@ -13,7 +13,12 @@ import { Loading } from "@/components/loading";
 import { ServerError } from "@/components/serverError";
 import { useNovelPreviousChapter } from "@/hooks/useNovelPreviousChapter";
 import { useNovelNextChapter } from "@/hooks/useNovelNextChapter";
-// import { AddComment } from "@/components/addComment";
+import { AddComment } from "@/components/addComment";
+import { useUser } from "@/hooks/useUser";
+import { useChapterComments } from "@/hooks/useChapterComments";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime"
+dayjs.extend(relativeTime)
 
 function Pagination() {
     return (
@@ -72,6 +77,7 @@ function createMarkup(markup: string) {
 export default function Chapter() {
     const router = useRouter()
     const { chapter, novel } = router.query
+    const { data: user } = useUser()
 
     // getting novel's previous chapter
     const {
@@ -118,7 +124,6 @@ export default function Chapter() {
                             <span className="text-sm text-gray-400 dark:text-gray-300 pl-3">{item.created_at}</span>
                         </Link>
                     ))}
-
                 </div>
             </div>
     }
@@ -131,32 +136,45 @@ export default function Chapter() {
         chapters = <ServerError message={errorChapters?.message ?? "can't find resource"} />
     }
 
-    const [sort, setSort] = useState("top")
-    const comment = {
-        username: "slimanimeddine",
-        date: "5 years ago",
-        content: "On sait depuis longtemps que travailler avec du texte lisible et contenant du sens est source de distractions, et empêche de se concentrer sur la mise en page elle-même. L'avantage du Lorem Ipsum sur un texte générique comme 'Du texte",
-        likes: 55,
-        dislikes: 12,
-        commentReplies: [
-            {
-                username: "slimanimeddine",
-                date: "5 years ago",
-                content: "On sait depuis longtemps que travailler avec du texte lisible et contenant du sens est source de distractions, et empêche de se concentrer sur la mise en page elle-même. L'avantage du Lorem Ipsum sur un texte générique comme 'Du texte",
-                likes: 55,
-                dislikes: 12,
-            },
-            {
-                username: "slimanimeddine",
-                date: "5 years ago",
-                content: "On sait depuis longtemps que travailler avec du texte lisible et contenant du sens est source de distractions, et empêche de se concentrer sur la mise en page elle-même. L'avantage du Lorem Ipsum sur un texte générique comme 'Du texte",
-                likes: 55,
-                dislikes: 12,
-            },
-        ]
+    const [sort, setSort] = useState<"new" | "old" | "top">("top")
+
+    const addCommentProps = {
+        chapter_id: dataChapter?.chapter?.id as number,
+        chapterSlug: chapter as string,
     }
 
-    const comments = Array(10).fill(comment)
+    // getting a chapter's comments
+    let commentsToRender
+
+    const {
+        data: dataComments,
+        isLoading: isLoadingComments,
+        isError: isErrorComments,
+        error: errorComments
+    } = useChapterComments(`${chapter}`, sort)
+
+    if (dataComments?.comments) {
+        const commentsArr = dataComments.comments.map(item => ({
+            username: item.authorUsername,
+            date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
+            content: item.content,
+            likes: item.likes,
+            dislikes: item.dislikes,
+            comment_id: item.id
+        }))
+
+        commentsToRender = commentsArr.map(item => (
+            <Comment {...item} key={item.comment_id} />
+        ))
+    }
+
+    if (isLoadingComments) {
+        commentsToRender = <Loading />
+    }
+
+    if (isErrorComments) {
+        commentsToRender = <ServerError message={errorComments?.message ?? "can't find resource"} />
+    }
 
     return (
         <>
@@ -243,7 +261,7 @@ export default function Chapter() {
             </div>
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="flex w-full justify-between items-center my-5 max-md:px-2">
-                    <span className="capitalize text-lg font-bold">1,556 Comments</span>
+                    <span className="capitalize text-lg font-bold">{dataComments?.comments.length ?? [].length} Comments</span>
                     <Popover className="relative">
                         {({ open }) => (
                             <>
@@ -268,19 +286,17 @@ export default function Chapter() {
                     </Popover>
                 </div>
             </div>
-            {/* <div className="flex justify-center items-center max-w-4xl mx-auto mb-5">
-                <AddComment />
-            </div> */}
-            <div className="flex justify-center items-center max-w-4xl m-auto">
+            <div className="flex justify-center items-center max-w-4xl mx-auto mb-5">
+                {user?.id && <AddComment {...addCommentProps} />}
+            </div>
+            <div className="flex justify-center items-center max-w-4xl mx-auto mb-5">
                 <div className="flex flex-col items-start gap-5 max-md:px-2">
-                    {comments.map((item, i) => (
-                        <Comment {...item} key={i} />
-                    ))}
+                    {commentsToRender}
                 </div>
             </div>
-            <div className="flex justify-start items-center max-w-4xl my-8 mx-auto">
+            {/* <div className="flex justify-start items-center max-w-4xl my-8 mx-auto">
                 <Pagination />
-            </div>
+            </div> */}
         </>
     )
 }

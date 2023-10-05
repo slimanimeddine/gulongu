@@ -7,34 +7,36 @@ import { useMutation, useQueryClient } from "react-query"
 import { z } from "zod"
 import { InputError } from "./inputError"
 
-export const addReviewReplySchema = z.object({
+export const addCommentReplySchema = z.object({
     content: z.string({
         required_error: "review reply content is required",
     }).min(1, "review reply is empty")
 })
 
-export type TAddReviewReplySchema = z.infer<typeof addReviewReplySchema>
+export type TAddCommentReplySchema = z.infer<typeof addCommentReplySchema>
 
-export const addReviewReplySchemaServerErrors = z.object({
+export const addCommentReplySchemaServerErrors = z.object({
     content: z.string().array().optional()
 })
 
-export type TAddReviewReplySchemaServerErrors = z.infer<typeof addReviewReplySchemaServerErrors>
+export type TAddCommentReplySchemaServerErrors = z.infer<typeof addCommentReplySchemaServerErrors>
 
-export function AddReviewReply({
-    review_id,
+export function AddCommentReply({
+    comment_id,
 }: {
-    review_id: number,
+    comment_id: number,
 }) {
-    const [serverErrors, setServerErrors] = useState<TAddReviewReplySchemaServerErrors>()
+    const [serverErrors, setServerErrors] = useState<TAddCommentReplySchemaServerErrors>()
     const queryClient = useQueryClient()
 
-    const addReviewReplyMutation = useMutation({
-        mutationFn: (props: TAddReviewReplySchema) => {
+    const addCommentReplyMutation = useMutation({
+        mutationFn: (props: TAddCommentReplySchema) => {
             return axios
-                .post('/api/reviewReplies', {
+                .post('/api/commentReplies', {
                     content: props.content,
-                    review_id,
+                    comment_id,
+                    likes: 0,
+                    dislikes: 0
                 })
                 .then()
                 .catch(error => {
@@ -42,8 +44,8 @@ export function AddReviewReply({
                 })
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [`/reviewReplies/${review_id}`] })
-            queryClient.invalidateQueries({ queryKey: ['reviews'] })
+            queryClient.invalidateQueries({ queryKey: [`/commentReplies/${comment_id}`] })
+            queryClient.invalidateQueries({ queryKey: ['comments'] })
         }
     })
 
@@ -58,12 +60,12 @@ export function AddReviewReply({
         },
         reset,
         setError,
-    } = useForm<TAddReviewReplySchema>({
-        resolver: zodResolver(addReviewReplySchema)
+    } = useForm<TAddCommentReplySchema>({
+        resolver: zodResolver(addCommentReplySchema)
     })
 
-    const onSubmit = async (data: TAddReviewReplySchema) => {
-        addReviewReplyMutation.mutate(data)
+    const onSubmit = async (data: TAddCommentReplySchema) => {
+        addCommentReplyMutation.mutate(data)
 
         if (serverErrors) {
             if (serverErrors.content) {

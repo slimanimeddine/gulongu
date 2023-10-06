@@ -1,12 +1,11 @@
 import axios from "@/lib/axios"
 import { csrf } from "@/lib/csrf"
-import { useRouter } from "next/router"
 import { useQueryClient, useMutation } from "react-query"
+import { useRedirect } from "./useRedirect"
 
 export const useLogOut = () => {
     const queryClient = useQueryClient()
-    const router = useRouter();
-
+    const {redirectTo} = useRedirect()
 
     const logOutMutation = useMutation({
         mutationFn: () => {
@@ -20,7 +19,7 @@ export const useLogOut = () => {
     const logOut = async () => {
         await csrf()
         logOutMutation.mutate()
-        router.reload()
+        redirectTo('/')
     }
 
     return { logOut }

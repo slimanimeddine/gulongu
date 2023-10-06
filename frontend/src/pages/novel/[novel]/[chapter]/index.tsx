@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Popover } from '@headlessui/react'
 import { Comment } from "@/components/comment";
 import { useRouter } from 'next/router'
@@ -18,55 +18,77 @@ import { useUser } from "@/hooks/useUser";
 import { useChapterComments } from "@/hooks/useChapterComments";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime"
+import { useAddBookmark } from "@/hooks/useAddBookmark";
 dayjs.extend(relativeTime)
 
-function Pagination() {
+function Alert() {
     return (
-        <div className="flex justify-start items-center gap-2 max-md:px-2">
-            <button
-                className="border rounded-md cursor-auto text-gray-400 h-[32px] w-[32px] flex justify-center items-center"
-            >
-                <ChevronLeftIcon />
-            </button>
-            <button
-                className="h-[32px] w-[32px] flex justify-center items-center border border-sky-600 rounded-md"
-            >
-                1
-            </button>
-            <button
-                className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
-            >
-                2
-            </button>
-            <button
-                className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
-            >
-                3
-            </button>
-            <button
-                className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
-            >
-                4
-            </button>
-            <button
-                className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
-            >
-                5
-            </button>
-            <span>...</span>
-            <button
-                className="border rounded-md hover:bg-gray-100 h-[32px] w-[32px] flex justify-center items-center dark:hover:bg-stone-800"
-            >
-                14
-            </button>
-            <button
-                className="border rounded-md hover:bg-gray-100 h-[32px] w-[32px] flex justify-center items-center dark:hover:bg-stone-800"
-            >
-                <ChevronRightIcon />
-            </button>
+        <div className="flex items-center p-4 my-2 w-full text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+            <div className="flex justify-between items-center w-full">
+                <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="mr-3 icon icon-tabler icon-tabler-circle-check" width={24} height={24} viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                        <path d="M9 12l2 2l4 -4"></path>
+                    </svg>
+                    <span className="sr-only">Info</span>
+                    <div>
+                        <span className="font-bold">Chapter marked as read!</span>
+                    </div>
+                </div>
+                <button className="dark:text-white font-bold">Undo</button>
+            </div>
         </div>
     )
 }
+
+// function Pagination() {
+//     return (
+//         <div className="flex justify-start items-center gap-2 max-md:px-2">
+//             <button
+//                 className="border rounded-md cursor-auto text-gray-400 h-[32px] w-[32px] flex justify-center items-center"
+//             >
+//                 <ChevronLeftIcon />
+//             </button>
+//             <button
+//                 className="h-[32px] w-[32px] flex justify-center items-center border border-sky-600 rounded-md"
+//             >
+//                 1
+//             </button>
+//             <button
+//                 className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
+//             >
+//                 2
+//             </button>
+//             <button
+//                 className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
+//             >
+//                 3
+//             </button>
+//             <button
+//                 className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
+//             >
+//                 4
+//             </button>
+//             <button
+//                 className="h-[32px] w-[32px] flex justify-center items-center border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800"
+//             >
+//                 5
+//             </button>
+//             <span>...</span>
+//             <button
+//                 className="border rounded-md hover:bg-gray-100 h-[32px] w-[32px] flex justify-center items-center dark:hover:bg-stone-800"
+//             >
+//                 14
+//             </button>
+//             <button
+//                 className="border rounded-md hover:bg-gray-100 h-[32px] w-[32px] flex justify-center items-center dark:hover:bg-stone-800"
+//             >
+//                 <ChevronRightIcon />
+//             </button>
+//         </div>
+//     )
+// }
 
 function createMarkup(markup: string) {
     return {
@@ -176,6 +198,41 @@ export default function Chapter() {
         commentsToRender = <ServerError message={errorComments?.message ?? "can't find resource"} />
     }
 
+    // tracking progress
+    const chapterRef = useRef<HTMLDivElement | null>(null)
+    const bookmarkToAdd = {
+        novelSlug: `${novel}`,
+        novelTitle: `${dataNovel?.novel?.title}` ,
+        chapterSlug: `${chapter}`,
+        chapterTitle: `${dataChapter?.chapter?.title}`,
+    }
+    const obj = useAddBookmark(bookmarkToAdd)
+
+    useEffect(() => {
+        function handleScroll() {
+            if (chapterRef.current) {
+                const scrollPosition = window.scrollY
+                const chapterOffsetTop = chapterRef.current.offsetTop
+                const chapterHeight = chapterRef.current.offsetHeight
+
+                // Calculate the threshold based on chapter height and offsetTop
+                const threshold = chapterOffsetTop + chapterHeight * 0.75
+
+                if (scrollPosition >= threshold) {
+                    obj.addBookmarkMutation.mutate()
+                }
+            }
+        }
+
+        window.addEventListener('scroll', handleScroll)
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
+        }
+    }, [])
+
+
+
     return (
         <>
             <Head>
@@ -235,12 +292,13 @@ export default function Chapter() {
                     {/* markup */}
                     {
                         dataChapter?.chapter
-                            ? <div className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
+                            ? <div ref={chapterRef} className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
                             : <div className="self-center">
                                 <Loading />
                             </div>
                     }
-
+                    {/* alert */}
+                    {obj.added && !!user?.id && <Alert />}
                     {dataNextChapter?.nextChapter.slug && <Link
                         href={`../${novel}/${dataNextChapter.nextChapter.slug}`}
                         className="self-center bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full text-lg font-bold text-center py-4 w-48 my-4"

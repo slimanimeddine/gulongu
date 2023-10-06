@@ -37,7 +37,7 @@ export function UserDropdown() {
                                         <UserCircle />
                                         <span>{user.username}</span>
                                     </div>
-                                    <Link
+                                    {/* <Link
                                         href="/profile"
                                         className="text-left text-sm font-semibold pl-4 py-2 hover:bg-gray-100 dark:hover:bg-stone-600"
                                     >
@@ -48,7 +48,7 @@ export function UserDropdown() {
                                         className="text-left text-sm font-semibold pl-4 py-2 hover:bg-gray-100 dark:hover:bg-stone-600"
                                     >
                                         Settings
-                                    </Link>
+                                    </Link> */}
                                     <button
                                         className="text-left text-sm font-semibold pl-4 py-2 hover:bg-gray-100 dark:hover:bg-stone-600"
                                         onClick={logOut}

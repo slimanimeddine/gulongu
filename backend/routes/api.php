@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentReplyController;
@@ -23,7 +24,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
-
 
 // get all novels
 Route::get('/novels', [NovelController::class, 'index']);
@@ -102,3 +102,9 @@ Route::middleware('auth:sanctum')->put('/commentReplies/{commentReplyId}/like', 
 
 // add a dislike to a comment reply
 Route::middleware('auth:sanctum')->put('/commentsReplies/{commentReplyId}/dislike', [CommentReplyController::class, 'dislikeCommentReply'])->where('commentReplyId', '[0-9]+');
+
+// add a bookmark
+Route::middleware('auth:sanctum')->post('/bookmarks', [BookmarkController::class, 'store']);
+
+// get all user's booksmarks
+Route::middleware('auth:sanctum')->get('/bookmarks/{userId}', [BookmarkController::class, 'getUserBookmarks'])->where('userId', '[0-9]+');

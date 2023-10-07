@@ -50,22 +50,24 @@ export default function Novel() {
     }, [refetchReviews, sortReviews]);
 
     if (dataReviews) {
-        reviewsToRender = dataReviews
-            .map(item => ({
-                reviewId: item.id,
-                username: item.authorUsername,
-                date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
-                rating: item.isRecommended === 1 ? "recommended" : "not recommended",
-                content: item.content,
-                likes: item.likes,
-                dislikes: item.dislikes,
-                replies: item.numberOfReplies,
-                user_id: user?.id as number,
-                novelSlug: slug
-            }))
-            .slice(0, 3).map(item => (
-                <Review {...item} key={item.reviewId} />
-            ))
+        reviewsToRender = dataReviews.length > 0
+            ? dataReviews
+                .map(item => ({
+                    reviewId: item.id,
+                    username: item.authorUsername,
+                    date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
+                    rating: item.isRecommended === 1 ? "recommended" : "not recommended",
+                    content: item.content,
+                    likes: item.likes,
+                    dislikes: item.dislikes,
+                    replies: item.numberOfReplies,
+                    user_id: user?.id as number,
+                    novelSlug: slug
+                }))
+                .slice(0, 3).map(item => (
+                    <Review {...item} key={item.reviewId} />
+                ))
+            : "No reviews yet!"
     }
 
     if (isLoadingReviews || isRefetchingReviews) {
@@ -77,6 +79,8 @@ export default function Novel() {
         reviewsToRender = <ServerError message={errorReviews?.message ?? "can't find resource"} />
         reviewsModal = <ServerError message={errorReviews?.message ?? "can't find resource"} />
     }
+
+    /////////////////////////////////////////////////////
 
     // getting novel's chapters
     const {
@@ -106,6 +110,8 @@ export default function Novel() {
     if (isErrorChapters) {
         chaptersToRender = <ServerError message={errorChapters?.message ?? "can't find resource"} />
     }
+
+    /////////////////////////////////////////////////////
 
     // getting novel data
     const {
@@ -188,7 +194,7 @@ export default function Novel() {
         reviewsModal = <ServerError message={errorNovel?.message ?? "can't find resource"} />
     }
 
-    //////////////////////////////////
+    /////////////////////////////////////////////////////
 
     return (
         <>

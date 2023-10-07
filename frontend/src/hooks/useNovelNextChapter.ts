@@ -4,7 +4,8 @@ import { AxiosError } from "axios"
 import { useQuery } from "react-query"
 
 export const useNovelNextChapter = (novelSlug: string, chapterSlug: string) => {
-    const { data, isLoading, isError, error } = useQuery<{ nextChapter: IChapter }, AxiosError>(`novels/${novelSlug}/chapters/${chapterSlug}/next`,
+    const { data, isLoading, isError, error } = useQuery<Omit<IChapter, "content">, AxiosError>(
+        ['novels', novelSlug, 'chapters', chapterSlug, 'next'],
         () => {
             return axios
                 .get(`/api/novels/${novelSlug}/chapters/${chapterSlug}/next`)

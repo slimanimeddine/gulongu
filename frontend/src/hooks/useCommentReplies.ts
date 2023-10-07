@@ -4,8 +4,8 @@ import { AxiosError } from "axios"
 import { useQuery } from "react-query"
 
 export const useCommentReplies = (commentId: number, enabled: boolean) => {
-    const { data, isLoading, isError, error } = useQuery<{ commentReplies: ICommentReply[] }, AxiosError>({
-        queryKey: `/commentReplies/${commentId}`,
+    const { data, isLoading, isError, error, refetch, isRefetching, isRefetchError } = useQuery<ICommentReply[], AxiosError>({
+        queryKey: ['commentReplies', commentId],
         queryFn: () => {
             return axios
                 .get(`/api/commentReplies/${commentId}`)
@@ -19,6 +19,9 @@ export const useCommentReplies = (commentId: number, enabled: boolean) => {
         data,
         isLoading,
         isError,
-        error
+        error,
+        refetch,
+        isRefetchError,
+        isRefetching
     }
 }

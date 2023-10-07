@@ -135,8 +135,9 @@ export function Comment({
 
     let commentRepliesToRender
 
-    if (data?.commentReplies) {
-        const reviewRepliesArr = data?.commentReplies?.map(item => ({
+    if (data) {
+        commentRepliesToRender = data.length > 0 
+        ? commentRepliesToRender = data?.map(item => ({
             username: item.authorUsername,
             date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
             content: item.content,
@@ -144,9 +145,10 @@ export function Comment({
             dislikes: item.dislikes,
             commentReply_id: item.id
         }))
-
-
-        commentRepliesToRender = reviewRepliesArr.map(item => (<CommentReply key={item.commentReply_id} {...item} />))
+            .map(item => (
+                <CommentReply key={item.commentReply_id} {...item} />
+            ))
+            : "No replies yet!"
     }
 
     if (isLoading) {
@@ -170,7 +172,6 @@ export function Comment({
         }
         commentDislike.mutate()
     }
-
 
     return (
         <div className="flex gap-3 rounded-xl">

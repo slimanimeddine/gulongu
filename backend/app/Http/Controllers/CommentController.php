@@ -58,9 +58,7 @@ class CommentController extends Controller
             $comments = Comment::where('chapterSlug', $chapterSlug)->orderby('likes', 'desc')->get();
         }
 
-        return response()->json([
-            "comments" => $comments
-        ], 200);
+        return response()->json($comments);
     }
 
     /**

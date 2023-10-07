@@ -4,17 +4,22 @@ import { AxiosError } from "axios";
 import { useQuery } from "react-query"
 
 export const useChapterComments = (chapterSlug: string, sort: string) => {
-    const { data, isLoading, isError, error } = useQuery<{ comments: IComment[] }, AxiosError>(['comments', chapterSlug], () => {
-        return axios
-            .get(`/api/comments/${chapterSlug}/${sort}`)
-            .then(res => res.data)
-            .then(err => err)
-    })
+    const { data, isLoading, isError, error, refetch, isRefetching, isRefetchError } = useQuery<IComment[], AxiosError>(
+        ['comments', chapterSlug],
+        () => {
+            return axios
+                .get(`/api/comments/${chapterSlug}/${sort}`)
+                .then(res => res.data)
+                .then(err => err)
+        })
 
     return {
         data,
         isLoading,
         isError,
-        error
+        error,
+        refetch,
+        isRefetching,
+        isRefetchError
     }
 }

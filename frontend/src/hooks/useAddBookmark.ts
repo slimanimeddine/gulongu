@@ -1,7 +1,6 @@
 import axios from "@/lib/axios"
 import { useMutation, useQueryClient } from "react-query"
-import { useUser } from "./useUser";
-import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface AddBookmarkPros {
     novelSlug: string,
@@ -11,13 +10,11 @@ interface AddBookmarkPros {
 }
 
 export const useAddBookmark = (
-    props: AddBookmarkPros,
+
 ) => {
-    const [added, setAdded] = useState(false)
     const queryClient = useQueryClient()
-    const { data: user } = useUser()
     const addBookmarkMutation = useMutation({
-        mutationFn: () => {
+        mutationFn: (props: AddBookmarkPros) => {
             return axios
                 .post('/api/bookmarks', props)
                 .then()
@@ -26,13 +23,11 @@ export const useAddBookmark = (
                 })
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['bookmarks', user?.id] })
-            setAdded(true)
-        }
+            queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+            toast.success('Chapter marked as read!')
+        },
     })
 
-    return {
-        addBookmarkMutation,
-        added
-    }
+    return addBookmarkMutation
+
 }

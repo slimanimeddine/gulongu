@@ -35,9 +35,7 @@ class CommentReplyController extends Controller
                 'dislikes' => $fields['dislikes']
             ]);
 
-            return response()->json([
-                'commentReply' => $commentReply
-            ], 200);
+            return response()->json($commentReply);
         }
     }
     /**
@@ -45,9 +43,8 @@ class CommentReplyController extends Controller
      */
     public function getCommentsReplies(string $commentId)
     {
-        return response()->json([
-            'commentReplies' => CommentReply::where('comment_id', $commentId)->get()
-        ]);
+        $commentReplies = CommentReply::where('comment_id', $commentId)->get();
+        return response()->json($commentReplies);
     }
 
     /**

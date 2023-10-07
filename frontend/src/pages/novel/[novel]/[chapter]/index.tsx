@@ -19,28 +19,8 @@ import { useChapterComments } from "@/hooks/useChapterComments";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime"
 import { useAddBookmark } from "@/hooks/useAddBookmark";
+import { ChapterLink } from "@/components/ChapterLink";
 dayjs.extend(relativeTime)
-
-function Alert() {
-    return (
-        <div className="flex items-center p-4 my-2 w-full text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
-            <div className="flex justify-between items-center w-full">
-                <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="mr-3 icon icon-tabler icon-tabler-circle-check" width={24} height={24} viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
-                        <path d="M9 12l2 2l4 -4"></path>
-                    </svg>
-                    <span className="sr-only">Info</span>
-                    <div>
-                        <span className="font-bold">Chapter marked as read!</span>
-                    </div>
-                </div>
-                <button className="dark:text-white font-bold">Undo</button>
-            </div>
-        </div>
-    )
-}
 
 // function Pagination() {
 //     return (
@@ -98,31 +78,32 @@ function createMarkup(markup: string) {
 
 export default function Chapter() {
     const router = useRouter()
-    const { chapter, novel } = router.query
+    const chapter = `${router.query.chapter}`
+    const novel = `${router.query.novel}`
     const { data: user } = useUser()
 
     // getting novel's previous chapter
     const {
         data: dataPreviousChapter,
-    } = useNovelPreviousChapter(`${novel}`, `${chapter}`)
+    } = useNovelPreviousChapter(novel, chapter)
 
     // getting novel's next chapter
     const {
         data: dataNextChapter,
-    } = useNovelNextChapter(`${novel}`, `${chapter}`)
+    } = useNovelNextChapter(novel, chapter)
 
     // get chapter
     const {
         data: dataChapter,
-    } = useNovelChapter(`${novel}`, `${chapter}`)
+    } = useNovelChapter(novel, chapter)
 
     //get novel
     const {
         data: dataNovel,
-    } = useNovel(`${novel}`)
+    } = useNovel(novel)
 
     const [enabled, setEnabled] = useState(false)
-    let chapters
+    let chaptersToRender
 
     // get novel chapters
     const {
@@ -130,39 +111,39 @@ export default function Chapter() {
         isLoading: isLoadingChapters,
         isError: isErrorChapters,
         error: errorChapters
-    } = useNovelChapters(`${novel}`, enabled)
+    } = useNovelChapters(novel, enabled)
 
-    if (dataChapters?.chapters) {
-        chapters =
+    if (dataChapters) {
+        chaptersToRender =
             <div className="bg-gray-100 dark:bg-stone-800 rounded-b-xl">
                 <div className="flex flex-col">
-                    {dataChapters.chapters.map(item => (
-                        <Link
-                            href={`../${novel}/${item.slug}`}
-                            className="flex flex-col border-b border-gray-400 pb-2 hover:bg-gray-200 dark:hover:bg-stone-700"
-                            key={item.id}
-                        >
-                            <span className="text-lg font-semibold capitalize text-gray-700 dark:text-gray-200 pl-3">{item.title}</span>
-                            <span className="text-sm text-gray-400 dark:text-gray-300 pl-3">{item.created_at}</span>
-                        </Link>
-                    ))}
+                    {dataChapters
+                        .map(item => ({
+                            novelSlug: novel,
+                            ChapterSlug: item.slug,
+                            title: item.title,
+                            created_at: item.created_at.substring(0, 10)
+                        }))
+                        .map(item => (
+                            <ChapterLink {...item} key={item.novelSlug} />
+                        ))}
                 </div>
             </div>
     }
 
     if (isLoadingChapters) {
-        chapters = <Loading />
+        chaptersToRender = <Loading />
     }
 
     if (isErrorChapters) {
-        chapters = <ServerError message={errorChapters?.message ?? "can't find resource"} />
+        chaptersToRender = <ServerError message={errorChapters?.message ?? "can't find resource"} />
     }
 
-    const [sort, setSort] = useState<"new" | "old" | "top">("top")
+    const [sortComments, setSortComments] = useState<"new" | "old" | "top">("top")
 
     const addCommentProps = {
-        chapter_id: dataChapter?.chapter?.id as number,
-        chapterSlug: chapter as string,
+        chapter_id: dataChapter?.id ?? 0,
+        chapterSlug: chapter
     }
 
     // getting a chapter's comments
@@ -172,29 +153,37 @@ export default function Chapter() {
         data: dataComments,
         isLoading: isLoadingComments,
         isError: isErrorComments,
-        error: errorComments
-    } = useChapterComments(`${chapter}`, sort)
+        error: errorComments,
+        refetch: refetchComments,
+        isRefetching: isRefetchingComments,
+        isRefetchError: isRefetchErrorComments
+    } = useChapterComments(chapter, sortComments)
 
-    if (dataComments?.comments) {
-        const commentsArr = dataComments.comments.map(item => ({
-            username: item.authorUsername,
-            date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
-            content: item.content,
-            likes: item.likes,
-            dislikes: item.dislikes,
-            comment_id: item.id
-        }))
+    useEffect(() => {
+        refetchComments();
+    }, [refetchComments, sortComments]);
 
-        commentsToRender = commentsArr.map(item => (
-            <Comment {...item} key={item.comment_id} />
-        ))
+    if (dataComments) {
+        commentsToRender = dataComments.length > 0
+            ? dataComments.map(item => ({
+                username: item.authorUsername,
+                date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
+                content: item.content,
+                likes: item.likes,
+                dislikes: item.dislikes,
+                comment_id: item.id
+            }))
+                .map(item => (
+                    <Comment {...item} key={item.comment_id} />
+                ))
+            : "No comments yet!"
     }
 
-    if (isLoadingComments) {
+    if (isLoadingComments || isRefetchingComments) {
         commentsToRender = <Loading />
     }
 
-    if (isErrorComments) {
+    if (isErrorComments || isRefetchErrorComments) {
         commentsToRender = <ServerError message={errorComments?.message ?? "can't find resource"} />
     }
 
@@ -202,11 +191,13 @@ export default function Chapter() {
     const chapterRef = useRef<HTMLDivElement | null>(null)
     const bookmarkToAdd = {
         novelSlug: `${novel}`,
-        novelTitle: `${dataNovel?.novel?.title}` ,
+        novelTitle: `${dataNovel?.title}`,
         chapterSlug: `${chapter}`,
-        chapterTitle: `${dataChapter?.chapter?.title}`,
+        chapterTitle: `${dataChapter?.title}`,
     }
-    const obj = useAddBookmark(bookmarkToAdd)
+
+    const addBookmarkMutation = useAddBookmark()
+    const [read, setRead] = useState(false)
 
     useEffect(() => {
         function handleScroll() {
@@ -215,11 +206,11 @@ export default function Chapter() {
                 const chapterOffsetTop = chapterRef.current.offsetTop
                 const chapterHeight = chapterRef.current.offsetHeight
 
-                // Calculate the threshold based on chapter height and offsetTop
                 const threshold = chapterOffsetTop + chapterHeight * 0.75
 
                 if (scrollPosition >= threshold) {
-                    obj.addBookmarkMutation.mutate()
+                    setRead(read)
+                    // addBookmark()
                 }
             }
         }
@@ -228,16 +219,18 @@ export default function Chapter() {
 
         return () => {
             window.removeEventListener('scroll', handleScroll)
+            setRead(false)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-
+    console.log(read)
 
     return (
         <>
             <Head>
-                <title>{`${dataNovel?.novel.title ?? ""} - ${dataChapter?.chapter.title ?? ""}`}</title>
-                <meta property="og:title" content={`${dataNovel?.novel.title ?? ""} - ${dataChapter?.chapter.title ?? ""}`} key="title" />
+                <title>{`${dataNovel && dataNovel?.title} - ${dataChapter && dataChapter?.title}`}</title>
+                <meta property="og:title" content={`${dataNovel && dataNovel?.title} - ${dataChapter && dataChapter?.title}`} key="title" />
             </Head>
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="w-full py-3">
@@ -251,13 +244,13 @@ export default function Chapter() {
                             <div className="border border-black rounded-lg">
                                 <PhotoIcon width={29} height={40} />
                             </div>
-                            <span className="font-semibold">{dataNovel?.novel.title ?? ""}</span>
+                            <span className="font-semibold">{dataNovel && dataNovel?.title}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             {
-                                dataPreviousChapter?.previousChapter
+                                dataPreviousChapter
                                     ? <Link
-                                        href={`../${novel}/${dataPreviousChapter.previousChapter.slug}`}
+                                        href={`../${novel}/${dataPreviousChapter.slug}`}
                                         className="rounded-full border border-blue-500 p-1 hover:shadow-xl"
                                     >
                                         <ChevronLeftIcon />
@@ -267,9 +260,9 @@ export default function Chapter() {
                                     </button>
                             }
                             {
-                                dataNextChapter?.nextChapter
+                                dataNextChapter
                                     ? <Link
-                                        href={`../${novel}/${dataNextChapter.nextChapter.slug}`}
+                                        href={`../${novel}/${dataNextChapter.slug}`}
                                         className="rounded-full border border-blue-500 p-1 hover:shadow-xl"
                                     >
                                         <ChevronRightIcon />
@@ -278,7 +271,7 @@ export default function Chapter() {
                                         <ChevronRightIcon />
                                     </button>
                             }
-                            <ChaptersSlideOver chapters={chapters ?? <></>} setEnabled={setEnabled} novel={dataNovel?.novel.title ?? ""} />
+                            <ChaptersSlideOver chapters={chaptersToRender ?? <></>} setEnabled={setEnabled} novel={dataNovel?.title ?? ""} />
                         </div>
                     </div>
                 </div>
@@ -288,25 +281,23 @@ export default function Chapter() {
             </div>
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="w-full flex flex-col gap-4 items-start py-4 max-md:px-2">
-                    <h1 className="text-2xl text-left text-gray-800 font-bold capitalize dark:text-gray-100">{dataChapter?.chapter.title ?? ""}</h1>
+                    <h1 className="text-2xl text-left text-gray-800 font-bold capitalize dark:text-gray-100">{dataChapter?.title ?? ""}</h1>
                     {/* markup */}
                     {
-                        dataChapter?.chapter
-                            ? <div ref={chapterRef} className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.chapter.content ?? "")} />
+                        dataChapter
+                            ? <div ref={chapterRef} className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.content ?? "")} />
                             : <div className="self-center">
                                 <Loading />
                             </div>
                     }
-                    {/* alert */}
-                    {obj.added && !!user?.id && <Alert />}
-                    {dataNextChapter?.nextChapter.slug && <Link
-                        href={`../${novel}/${dataNextChapter.nextChapter.slug}`}
+                    {dataNextChapter?.slug && <Link
+                        href={`../${novel}/${dataNextChapter.slug}`}
                         className="self-center bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full text-lg font-bold text-center py-4 w-48 my-4"
                     >
                         next chapter
                     </Link>}
-                    {dataPreviousChapter?.previousChapter.slug && <Link
-                        href={`../${novel}/${dataPreviousChapter.previousChapter.slug}`}
+                    {dataPreviousChapter?.slug && <Link
+                        href={`../${novel}/${dataPreviousChapter.slug}`}
                         className="self-center text-gray-500 uppercase text-sm text-center underline font-medium"
                     >
                         previous chapter
@@ -319,12 +310,12 @@ export default function Chapter() {
             </div>
             <div className="flex justify-center items-center max-w-4xl m-auto">
                 <div className="flex w-full justify-between items-center my-5 max-md:px-2">
-                    <span className="capitalize text-lg font-bold">{dataComments?.comments.length ?? [].length} Comments</span>
+                    <span className="capitalize text-lg font-bold">{dataComments?.length ?? [].length} Comments</span>
                     <Popover className="relative">
                         {({ open }) => (
                             <>
                                 <Popover.Button className="inline-flex justify-between items-center px-2 py-1 capitalize text-md rounded-md border dark:bg-stone-800 hover:shadow-md hover:border-sky-500 hover:cursor-pointer dark:text-gray-200 outline-none">
-                                    <span>{sort}</span>
+                                    <span>{sortComments}</span>
                                     {
                                         open
                                             ? <CaretUpIcon />
@@ -334,9 +325,9 @@ export default function Chapter() {
 
                                 <Popover.Panel className="absolute z-10 right-0">
                                     <div className="flex flex-col py-2 shadow-md justify-start bg-white rounded-md overflow-auto max-h-40 border dark:bg-[#3B3B3B] dark:border-0">
-                                        <button onClick={() => setSort("top")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">top</button>
-                                        <button onClick={() => setSort("new")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">new</button>
-                                        <button onClick={() => setSort("old")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">old</button>
+                                        <button onClick={() => setSortComments("top")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">top</button>
+                                        <button onClick={() => setSortComments("new")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">new</button>
+                                        <button onClick={() => setSortComments("old")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">old</button>
                                     </div>
                                 </Popover.Panel>
                             </>
@@ -348,7 +339,7 @@ export default function Chapter() {
                 {user?.id && <AddComment {...addCommentProps} />}
             </div>
             <div className="flex justify-center items-center max-w-4xl mx-auto mb-5">
-                <div className="flex flex-col items-start gap-5 max-md:px-2">
+                <div className="flex flex-col items-start gap-5 max-md:px-2 w-full">
                     {commentsToRender}
                 </div>
             </div>

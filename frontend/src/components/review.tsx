@@ -104,16 +104,18 @@ function ReviewRepliesModal({
     let reviewRepliesToRender
 
     if (data) {
-        reviewRepliesToRender = data?.map(item => ({
-            username: item.authorUsername,
-            date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
-            content: item.content,
-            id: item.id
-        }))
-            .map(item => {
-                const { id, ...rest } = item
-                return <ReviewReply key={id} {...rest} />
-            })
+        reviewRepliesToRender = data.length > 0
+            ? data?.map(item => ({
+                username: item.authorUsername,
+                date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
+                content: item.content,
+                id: item.id
+            }))
+                .map(item => {
+                    const { id, ...rest } = item
+                    return <ReviewReply key={id} {...rest} />
+                })
+            : "No replies yet!"
     }
 
     if (isLoading) {

@@ -4,12 +4,14 @@ import { AxiosError } from "axios"
 import { useQuery } from "react-query"
 
 export const useNovelChapter = (novel: string, chapter: string) => {
-    const { data, isLoading, isError, error } = useQuery<{ chapter: IChapter }, AxiosError>(`novels/${novel}/chapters/${chapter}`, () => {
-        return axios
-            .get(`/api/novels/${novel}/chapters/${chapter}`)
-            .then(res => res.data)
-            .then(err => err)
-    })
+    const { data, isLoading, isError, error } = useQuery<IChapter, AxiosError>(
+        ['novels', novel, 'chapters', chapter],
+        () => {
+            return axios
+                .get(`/api/novels/${novel}/chapters/${chapter}`)
+                .then(res => res.data)
+                .then(err => err)
+        })
 
     return {
         data,

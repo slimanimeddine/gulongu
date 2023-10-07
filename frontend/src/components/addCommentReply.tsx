@@ -9,8 +9,8 @@ import { InputError } from "./inputError"
 
 export const addCommentReplySchema = z.object({
     content: z.string({
-        required_error: "review reply content is required",
-    }).min(1, "review reply is empty")
+        required_error: "comment reply content is required",
+    }).min(1, "comment reply is empty")
 })
 
 export type TAddCommentReplySchema = z.infer<typeof addCommentReplySchema>
@@ -44,8 +44,8 @@ export function AddCommentReply({
                 })
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [`/commentReplies/${comment_id}`] })
-            queryClient.invalidateQueries({ queryKey: ['comments'] })
+            queryClient.invalidateQueries({ queryKey: ['commentReplies', comment_id] })
+            // queryClient.invalidateQueries({ queryKey: ['comments'] })
         }
     })
 

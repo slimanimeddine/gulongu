@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { Suspense, useState } from "react"
+import { useEffect, useState } from "react"
 import { Popover } from '@headlessui/react'
 import { CaretDownIcon, CaretUpIcon, /* ChevronRightIcon, ChevronLeftIcon, */ ArrowUp, ArrowDown, RemoveIcon } from "@/components/svgIcons";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { useUser } from "@/hooks/useUser";
 import { useUserBookmarks } from "@/hooks/useUserBookmarks";
 import { Loading } from "@/components/loading";
 import { ServerError } from "@/components/serverError";
+import { useRemoveBookmark } from "@/hooks/useRemoveBookmark";
 
 // function Pagination() {
 //     return (
@@ -58,7 +59,7 @@ import { ServerError } from "@/components/serverError";
 // }
 
 export default function Bookmarks() {
-    const [sort, setSort] = useState("last read")
+    const [sort, setSort] = useState<"lastRead" | "novelName">("lastRead")
     const [asc, setAsc] = useState(true)
     const { data: user, isLoading: isLoadingUser, isError: isErrorUser } = useUser()
     const { redirectTo } = useRedirect()
@@ -73,37 +74,77 @@ export default function Bookmarks() {
         data,
         isLoading,
         isError,
-        error
-    } = useUserBookmarks()
+        error,
+        refetch,
+        isRefetchError,
+        isRefetching
+    } = useUserBookmarks(sort, asc ? "asc" : "desc")
 
+    useEffect(() => {
+        refetch();
+    }, [refetch, sort, asc]);
 
-    if (data?.bookmarks) {
-        bookmarksToRender = data.bookmarks.map(item => (
-            <tr key={item.id}>
-                <td className="whitespace-normal px-4 py-2 font-semibold hover:underline">
-                    <Link href={`/novel/${item.novelSlug}`}>
-                        {item.novelTitle}
-                    </Link>
-                </td>
-                <td className="whitespace-normal px-4 py-2 font-semibold hover:underline">
-                    <Link href={`/novel/${item.novelSlug}/${item.chapterSlug}`}>
-                        {item.chapterTitle}
-                    </Link>
-                </td>
-                <td className="whitespace-normal px-4 py-2 font-semibold">
-                    <button className="text-gray-600 hover:text-blue-500 dark:text-gray-100">
-                        <RemoveIcon />
-                    </button>
-                </td>
-            </tr>
-        ))
+    const removeBookmark = useRemoveBookmark()
+
+    if (data) {
+        bookmarksToRender =
+            <table className="min-w-full divide-y-2 divide-gray-200text-sm overflow-hidden">
+                <thead className="ltr:text-left rtl:text-right">
+                    <tr>
+                        <th className="whitespace-normal px-4 py-2 font-bold text-left">
+                            Title
+                        </th>
+                        <th className="whitespace-normal px-4 py-2 font-bold text-left">
+                            Last Read
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {data.length > 0
+                        ? data.map(item => (
+                            <tr key={item.id}>
+                                <td className="whitespace-normal px-4 py-2 font-semibold hover:underline">
+                                    <Link href={`/novel/${item.novelSlug}`}>
+                                        {item.novelTitle}
+                                    </Link>
+                                </td>
+                                <td className="whitespace-normal px-4 py-2 font-semibold hover:underline">
+                                    <Link href={`/novel/${item.novelSlug}/${item.chapterSlug}`}>
+                                        {item.chapterTitle}
+                                    </Link>
+                                </td>
+                                <td className="whitespace-normal px-4 py-2 font-semibold">
+                                    <button
+                                        onClick={() => {
+                                            removeBookmark.mutate(item.id)
+                                        }}
+                                        className="text-gray-600 hover:text-blue-500 dark:text-gray-100">
+                                        <RemoveIcon />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                        : <tr>
+                            <td className="whitespace-normal px-4 py-2 font-semibold hover:underline">
+                                <span></span>
+                            </td>
+                            <td className="whitespace-normal px-4 py-2 font-semibold hover:underline">
+                                <span></span>
+                            </td>
+                            <td className="whitespace-normal px-4 py-2 font-semibold">
+                                <span></span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
     }
 
-    if (isLoading) {
+    if (isLoading || isRefetching) {
         bookmarksToRender = <Loading />
     }
 
-    if (isError) {
+    if (isError || isRefetchError) {
         bookmarksToRender = <ServerError message={error?.message ?? "can't find resource"} />
     }
 
@@ -125,7 +166,7 @@ export default function Bookmarks() {
                             {({ open }) => (
                                 <>
                                     <Popover.Button className="inline-flex justify-between items-center w-[160px] px-2 py-1 capitalize text-md rounded-md border dark:bg-stone-800 hover:shadow-md hover:border-sky-500 hover:cursor-pointer dark:text-gray-200 outline-none">
-                                        <span className="capitalize">{sort}</span>
+                                        <span className="capitalize">{sort === "novelName" ? "novel name" : "last read"}</span>
                                         {
                                             open
                                                 ? <CaretUpIcon />
@@ -135,9 +176,8 @@ export default function Bookmarks() {
 
                                     <Popover.Panel className="absolute z-10 right-0">
                                         <div className="flex flex-col py-2 shadow-md justify-start w-[160px] bg-white rounded-md overflow-auto border dark:bg-[#3B3B3B] dark:border-0">
-                                            <button onClick={() => setSort("novel name")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">Novel Name</button>
-                                            <button onClick={() => setSort("last read")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">Last Read</button>
-                                            <button onClick={() => setSort("latest release")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">Latest Release</button>
+                                            <button onClick={() => setSort("novelName")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">Novel Name</button>
+                                            <button onClick={() => setSort("lastRead")} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">Last Read</button>
                                         </div>
                                     </Popover.Panel>
                                 </>
@@ -158,24 +198,7 @@ export default function Bookmarks() {
             </div>
             <div className="flex justify-center items-center max-w-4xl mx-auto mb-10">
                 <div className="overflow-x-auto w-full">
-                    <table className="min-w-full divide-y-2 divide-gray-200text-sm overflow-hidden">
-                        <thead className="ltr:text-left rtl:text-right">
-                            <tr>
-                                <th className="whitespace-normal px-4 py-2 font-bold text-left">
-                                    Title
-                                </th>
-                                <th className="whitespace-normal px-4 py-2 font-bold text-left">
-                                    Last Read
-                                </th>
-                            </tr>
-                        </thead>
-
-                        <tbody className="divide-y divide-gray-200">
-                            <Suspense fallback={"You haven't read any chapter yet!"}>
-                                {bookmarksToRender}
-                            </Suspense>
-                        </tbody>
-                    </table>
+                    {bookmarksToRender}
                 </div>
             </div>
             {/* <div className="flex justify-start items-center max-w-4xl my-8 mx-auto">

@@ -65,18 +65,12 @@ class ChapterController extends Controller
             $chapter = Chapter::where('novel_id', $novel->id)->where('slug', $chapter)->first();
 
             if ($chapter) {
-                return response()->json([
-                    'chapter' => $chapter,
-                ], 200);
+                return response()->json($chapter);
             } else {
-                return response()->json([
-                    'message' => 'chapter with given slug was not found'
-                ], 404);
+                abort(404, "Chapter not found!");
             }
         } else {
-            return response()->json([
-                'message' => 'novel with given slug was not found'
-            ], 404);
+                abort(404, "Novel not found!");
         }
     }
 
@@ -88,24 +82,17 @@ class ChapterController extends Controller
         //
         $novel = Novel::firstWhere('slug', $novelSlug);
         $chapter = Chapter::where('novel_id', $novel->id)->where('slug', $chapterSlug)->first();
+        $selectedColumns = ['id', 'created_at', 'updated_at', 'title', 'novel_id', 'slug'];
         if ($chapter) {
-            // Find the previous chapter
-            $previousChapter = Chapter::where('novel_id', $novel->id)->where('id', '<', $chapter->id)->orderBy('id', 'desc')->first();
+            $previousChapter = Chapter::select($selectedColumns)->where('novel_id', $novel->id)->where('id', '<', $chapter->id)->orderBy('id', 'desc')->first();
 
             if ($previousChapter) {
-                // Do something with $previousChapter
-                return response()->json([
-                    'previousChapter' => $previousChapter,
-                ], 200);
+                return response()->json($previousChapter);
             } else {
-                return response()->json([
-                    'message' => 'previous chapter was not found'
-                ], 404);
+                abort(404, "Previous chapter not found!");
             }
         } else {
-            return response()->json([
-                'message' => 'chapter was not found'
-            ], 404);
+                abort(404, "Chapter not found!");
         }
     }
 
@@ -117,24 +104,17 @@ class ChapterController extends Controller
         //
         $novel = Novel::firstWhere('slug', $novelSlug);
         $chapter = Chapter::where('novel_id', $novel->id)->where('slug', $chapterSlug)->first();
+        $selectedColumns = ['id', 'created_at', 'updated_at', 'title', 'novel_id', 'slug'];
         if ($chapter) {
-            // Find the previous chapter
-            $nextChapter = Chapter::where('novel_id', $novel->id)->where('id', '>', $chapter->id)->orderBy('id', 'asc')->first();
+            $nextChapter = Chapter::select($selectedColumns)->where('novel_id', $novel->id)->where('id', '>', $chapter->id)->orderBy('id', 'asc')->first();
 
             if ($nextChapter) {
-                // Do something with $nextChapter
-                return response()->json([
-                    'nextChapter' => $nextChapter,
-                ], 200);
+                return response()->json($nextChapter);
             } else {
-                return response()->json([
-                    'message' => 'next chapter was not found'
-                ], 404);
+                abort(404, "Next chapter not found!");
             }
         } else {
-            return response()->json([
-                'message' => 'chapter was not found'
-            ], 404);
+            abort(404, "Chapter not found!");
         }
     }
 
@@ -145,15 +125,12 @@ class ChapterController extends Controller
     {
         //
         $novel = Novel::firstWhere('slug', $novelSlug);
-        $chapter = Chapter::where('novel_id', $novel->id)->orderBy('id', 'asc')->first();
+        $selectedColumns = ['id', 'created_at', 'updated_at', 'title', 'novel_id', 'slug'];
+        $chapter = Chapter::select($selectedColumns)->where('novel_id', $novel->id)->orderBy('id', 'asc')->first();
         if ($chapter) {
-            return response()->json([
-                'firstChapter' => $chapter,
-            ], 200);
+            return response()->json($chapter);
         } else {
-            return response()->json([
-                'message' => 'chapter was not found'
-            ], 404);
+            abort(404, "Chapter not found!");
         }
     }
 }

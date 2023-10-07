@@ -1,7 +1,6 @@
 import Head from "next/head";
 import { NovelCardSeries } from "@/components/novelCard";
 import { filterFieldsSeries } from "@/helpers/filterFields";
-import { getRandomNumber } from "@/helpers/getRandomNumber";
 import { INovel } from "@/types/novelType";
 import { Loading } from "@/components/loading";
 import { ServerError } from "@/components/serverError";
@@ -11,7 +10,7 @@ import { useSortOrFilter } from "@/hooks/useSortOrFilter";
 
 export default function Series() {
     const searchParams = useSearchParams()
-    const sortBy = searchParams.get("sortBy") as "name" | "chapters"
+    const sortBy = searchParams.get("sortBy") as "name" | "chapters" | "rating"
     const filter = searchParams.get("filter") as string
     let elementToRender
     const {
@@ -28,7 +27,7 @@ export default function Series() {
         elementToRender = <div className="grid gap-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1 max-sm:px-5 px-20 my-5">
             {novelsData.length > 0
                 ? novelsData.map(item => (
-                    <NovelCardSeries {...item} key={item.id} likes={getRandomNumber()} />
+                    <NovelCardSeries {...item} key={item.id} />
                 ))
                 : "No novels found matching the selected filters."}
         </div>

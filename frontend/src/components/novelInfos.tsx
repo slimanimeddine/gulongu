@@ -26,9 +26,8 @@ export function NovelInfos({
     percLikes,
     viewAll,
     reviews,
-    novelSlug,
-    sort,
-    setSort
+    sortReviews,
+    setSortReviews
 }: NovelInfosPropsWithReviewsModalProps) {
     const [show, setShow] = useState(false)
     return (
@@ -57,9 +56,8 @@ export function NovelInfos({
                         nbReviews,
                         percLikes,
                         reviews,
-                        novelSlug,
-                        sort,
-                        setSort                    
+                        sortReviews,
+                        setSortReviews
                     }} />
                     <ChevronRightIcon />
                 </div>

@@ -56,7 +56,7 @@ Route::get('/novels/{novelSlug}/chapters/{chapterSlug}/next', [ChapterController
 Route::get('/novels/{novelSlug}/first', [ChapterController::class, 'getNovelsFirstChapter']);
 
 // get all novels sorted based on sortBy
-Route::get('/novels/{sortBy}/{filter}/sortorfilter', [NovelController::class, 'getNovelsSortedOrFiltered'])->whereIn('sortBy', ['name', 'chapters']);
+Route::get('/novels/{sortBy}/{filter}/sortorfilter', [NovelController::class, 'getNovelsSortedOrFiltered'])->whereIn('sortBy', ['name', 'chapters', 'rating']);
 
 // get all genres
 Route::get('/genres', [NovelController::class, 'getGenres']);
@@ -68,7 +68,7 @@ Route::middleware('auth:sanctum')->post('/reviews', [ReviewController::class, 's
 Route::middleware('auth:sanctum')->post('/reviewReplies', [ReviewReplyController::class, 'store']);
 
 // get novel's reviews
-Route::get('/reviews/{novelSlug}/{sort}', [ReviewController::class, 'getNovelsReviews'])->whereIn('sort', ['newest', 'oldest']);
+Route::get('/reviews/{novelSlug}/{sort}', [ReviewController::class, 'getNovelsReviews'])->whereIn('sort', ['newest', 'oldest', 'best', 'worst']);
 
 // get review's replies
 Route::get('/reviewReplies/{reviewId}', [ReviewReplyController::class, 'getReviewsReplies'])->where('reviewId', '[0-9]+');
@@ -108,3 +108,4 @@ Route::middleware('auth:sanctum')->post('/bookmarks', [BookmarkController::class
 
 // get all user's booksmarks
 Route::middleware('auth:sanctum')->get('/bookmarks/{userId}', [BookmarkController::class, 'getUserBookmarks'])->where('userId', '[0-9]+');
+

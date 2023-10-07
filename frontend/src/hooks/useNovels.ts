@@ -4,7 +4,7 @@ import { AxiosError } from "axios"
 import { useQuery } from "react-query"
 
 export const useNovels = () => {
-    const { data, isLoading, isError, error } = useQuery<INovel[], AxiosError>('novels', () => {
+    const { data, isLoading, isError, error } = useQuery<INovel[], AxiosError>(['novels'], () => {
         return axios
             .get('/api/novels')
             .then(res => res.data)

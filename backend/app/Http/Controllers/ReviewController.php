@@ -53,14 +53,18 @@ class ReviewController extends Controller
     {
         if ($sort == 'newest') {
             $reviews = Review::where('novelSlug', $novelSlug)->latest()->get();
+            return response()->json($reviews);
         }
-        if ($sort == 'oldest') {
+        else if ($sort == 'oldest') {
             $reviews = Review::where('novelSlug', $novelSlug)->oldest()->get();
+            return response()->json($reviews);
+        } else if ($sort == 'best') {
+            $reviews = Review::where('novelSlug', $novelSlug)->orderBy('likes', 'desc')->get();
+            return response()->json($reviews);
+        } else {
+            $reviews = Review::where('novelSlug', $novelSlug)->orderBy('dislikes', 'desc')->get();
+            return response()->json($reviews);
         }
-
-        return response()->json([
-            "reviews" => $reviews
-        ], 200);
     }
 
     /**

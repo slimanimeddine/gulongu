@@ -8,4 +8,7 @@ export interface INovel {
     numberOfChapters: number
     updated_at: string,
     created_at: string,
+    totalReviews: number,
+    totalRecommendations: number,
+    recommendationRatio: number,
 }

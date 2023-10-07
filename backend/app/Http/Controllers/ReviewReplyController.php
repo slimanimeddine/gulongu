@@ -39,13 +39,13 @@ class ReviewReplyController extends Controller
             ], 200);
         }
     }
+
     /**
      * get review's replies
      */
     public function getReviewsReplies(string $reviewId)
     {
-        return response()->json([
-            'reviewReplies' => ReviewReply::where('review_id', $reviewId)->get()
-        ]);
+        $reviewReplies = ReviewReply::where('review_id', $reviewId)->get();
+        return response()->json($reviewReplies);
     }
 }

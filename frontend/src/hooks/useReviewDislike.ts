@@ -1,7 +1,7 @@
 import axios from "@/lib/axios";
 import { useMutation, useQueryClient } from "react-query";
 
-export function useReviewDislike(reviewId: number) {
+export function useReviewDislike(reviewId: number, novelSlug: string) {
     const queryClient = useQueryClient()
 
     const reviewDislike = useMutation({
@@ -9,7 +9,7 @@ export function useReviewDislike(reviewId: number) {
             return axios.put(`/api/reviews/${reviewId}/dislike`)
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['reviews'] })
+            queryClient.invalidateQueries({ queryKey: ['reviews', novelSlug] })
         }
     })
 

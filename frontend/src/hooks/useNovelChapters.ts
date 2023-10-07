@@ -1,16 +1,11 @@
 import axios from "@/lib/axios"
+import { IChapter } from "@/types/chapterType"
 import { AxiosError } from "axios"
 import { useQuery } from "react-query"
-interface FilteredChapter {
-    id: number,
-    title: string,
-    slug: string,
-    created_at: string
-}
 
 export const useNovelChapters = (slug: string, enabled: boolean) => {
-    const { data, isLoading, isError, error } = useQuery<{ chapters: FilteredChapter[] }, AxiosError>({
-        queryKey: `novels/${slug}/chapters`,
+    const { data, isLoading, isError, error } = useQuery<Omit<IChapter, "content">[], AxiosError>({
+        queryKey: ['chapters', slug],
         queryFn: () => {
             return axios
                 .get(`/api/novels/${slug}/chapters`)
@@ -24,6 +19,6 @@ export const useNovelChapters = (slug: string, enabled: boolean) => {
         data,
         isLoading,
         isError,
-        error
+        error,
     }
 }

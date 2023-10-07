@@ -7,7 +7,6 @@ import dayjs from "dayjs"
 import { Loading } from "./loading"
 import { ServerError } from "./serverError"
 import relativeTime from "dayjs/plugin/relativeTime"
-import { useQueryClient } from "react-query"
 import { AddReviewReply } from "./addReviewReply"
 import { useUser } from "@/hooks/useUser"
 import { useRedirect } from "@/hooks/useRedirect"
@@ -65,6 +64,7 @@ interface ReviewRepliesModalProps {
     likes: number,
     dislikes: number,
     reviewId: number,
+    novelSlug: string
 }
 
 function ReviewRepliesModal({
@@ -77,10 +77,11 @@ function ReviewRepliesModal({
     likes,
     dislikes,
     reviewId,
+    novelSlug
 }: ReviewRepliesModalProps) {
     const { redirectTo } = useRedirect()
-    const reviewLike = useReviewLike(reviewId)
-    const reviewDislike = useReviewDislike(reviewId)
+    const reviewLike = useReviewLike(reviewId, novelSlug)
+    const reviewDislike = useReviewDislike(reviewId, novelSlug)
     const { data: user } = useUser()
     const [show, setShow] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
@@ -98,23 +99,21 @@ function ReviewRepliesModal({
         isLoading,
         isError,
         error
-    } = useReviewReplies(reviewId, isOpen)
+    } = useReviewReplies(reviewId, isOpen, novelSlug)
 
     let reviewRepliesToRender
 
-    if (data?.reviewReplies) {
-        const reviewRepliesArr = data?.reviewReplies?.map(item => ({
+    if (data) {
+        reviewRepliesToRender = data?.map(item => ({
             username: item.authorUsername,
             date: `${dayjs().from(dayjs(item.created_at), true)} ago`,
             content: item.content,
             id: item.id
         }))
-
-
-        reviewRepliesToRender = reviewRepliesArr.map(item => {
-            const { id, ...rest } = item
-            return <ReviewReply key={id} {...rest} />
-        })
+            .map(item => {
+                const { id, ...rest } = item
+                return <ReviewReply key={id} {...rest} />
+            })
     }
 
     if (isLoading) {
@@ -280,7 +279,8 @@ export interface ReviewProps {
     dislikes: number,
     replies: number,
     reviewId: number,
-    user_id: number
+    user_id: number,
+    novelSlug: string
 }
 
 export function Review({
@@ -293,12 +293,13 @@ export function Review({
     dislikes,
     replies,
     reviewId,
-    user_id
+    user_id,
+    novelSlug
 }: ReviewProps) {
     const [show, setShow] = useState(false)
     const { redirectTo } = useRedirect()
-    const reviewLike = useReviewLike(reviewId)
-    const reviewDislike = useReviewDislike(reviewId)
+    const reviewLike = useReviewLike(reviewId, novelSlug)
+    const reviewDislike = useReviewDislike(reviewId, novelSlug)
     const { data: user } = useUser()
 
     const reviewRepliesProps = {
@@ -311,7 +312,8 @@ export function Review({
         likes,
         dislikes,
         reviewId,
-        user_id
+        user_id,
+        novelSlug
     }
 
     const likeReview = () => {
@@ -399,9 +401,8 @@ export interface ReviewsModalProps {
     nbReviews: number,
     percLikes: number,
     reviews: ReviewProps[],
-    novelSlug: string,
-    sort: "newest" | "oldest",
-    setSort: React.Dispatch<React.SetStateAction<"newest" | "oldest">>
+    sortReviews: "newest" | "oldest" | "worst" | "best",
+    setSortReviews: React.Dispatch<React.SetStateAction<"newest" | "oldest" | "worst" | "best">>,
 }
 
 export function ReviewsModal({
@@ -409,9 +410,8 @@ export function ReviewsModal({
     nbReviews,
     percLikes,
     reviews,
-    novelSlug,
-    sort,
-    setSort
+    sortReviews,
+    setSortReviews,
 }: ReviewsModalProps) {
     const [isOpen, setIsOpen] = useState(false)
 
@@ -421,18 +421,6 @@ export function ReviewsModal({
 
     function openModal() {
         setIsOpen(true)
-    }
-
-    const queryClient = useQueryClient()
-
-    const getNewestReviews = () => {
-        setSort("newest")
-        queryClient.invalidateQueries(['reviews', novelSlug], { exact: true })
-    }
-
-    const getOldestReviews = () => {
-        setSort("oldest")
-        queryClient.invalidateQueries(['reviews', novelSlug], { exact: true })
     }
 
     return (
@@ -500,7 +488,7 @@ export function ReviewsModal({
                                                 {({ open }) => (
                                                     <>
                                                         <Popover.Button className="inline-flex justify-between items-center px-2 py-1 capitalize text-sm font-bold rounded-md border bg-gray-100 dark:bg-stone-800 hover:shadow-md hover:border-sky-500 hover:cursor-pointer dark:text-gray-200 outline-none">
-                                                            <span>{sort}</span>
+                                                            <span>{sortReviews}</span>
                                                             {
                                                                 open
                                                                     ? <CaretUpIcon />
@@ -509,9 +497,31 @@ export function ReviewsModal({
                                                         </Popover.Button>
 
                                                         <Popover.Panel className="absolute z-10 right-0">
-                                                            <div className="flex flex-col py-2 shadow-md justify-start bg-white w-44 rounded-md overflow-auto max-h-40 border dark:bg-[#3B3B3B] dark:border-0">
-                                                                <button onClick={getNewestReviews} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">newest</button>
-                                                                <button onClick={getOldestReviews} className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600">oldest</button>
+                                                            <div className="flex flex-col py-2 shadow-md justify-start bg-white w-44 rounded-md overflow-auto h-fit border dark:bg-[#3B3B3B] dark:border-0">
+                                                                <button
+                                                                    onClick={() => setSortReviews('newest')}
+                                                                    className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600"
+                                                                >
+                                                                    newest
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setSortReviews('oldest')}
+                                                                    className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600"
+                                                                >
+                                                                    oldest
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setSortReviews('worst')}
+                                                                    className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600"
+                                                                >
+                                                                    worst
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setSortReviews('best')}
+                                                                    className="capitalize text-left text-md px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-stone-600"
+                                                                >
+                                                                    best
+                                                                </button>
                                                             </div>
                                                         </Popover.Panel>
                                                     </>

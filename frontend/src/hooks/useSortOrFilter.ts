@@ -4,7 +4,7 @@ import { AxiosError } from "axios"
 import { useQuery } from "react-query"
 
 interface IProps {
-    sortBy: "name" | "chapters",
+    sortBy: "name" | "chapters" | "rating",
     filter: string
 }
 

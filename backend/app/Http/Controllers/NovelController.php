@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chapter;
 use App\Models\Novel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class NovelController extends Controller
 {
@@ -13,7 +13,26 @@ class NovelController extends Controller
      */
     public function index()
     {
-        return Novel::all();
+        // return Novel::all();
+        $novels = Novel::select('novels.*')
+            ->selectRaw('COUNT(reviews.id) as totalReviews')
+            ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+            ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+            ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+            ->groupBy(
+                'novels.id',
+                'novels.created_at',
+                'novels.updated_at',
+                'novels.title',
+                'novels.slug',
+                'novels.translator',
+                'novels.synopsis',
+                'novels.genres',
+                'novels.numberOfChapters'
+            )
+            ->get();
+
+        return response()->json($novels);
     }
 
     /**
@@ -59,11 +78,27 @@ class NovelController extends Controller
     public function getNovelBySlug(string $slug)
     {
         //
-        $novel = Novel::firstWhere('slug', $slug);
+        $novel = Novel::where('slug', $slug)
+            ->select('novels.*')
+            ->selectRaw('COUNT(reviews.id) as totalReviews')
+            ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+            ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+            ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+            ->groupBy(
+                'novels.id',
+                'novels.created_at',
+                'novels.updated_at',
+                'novels.title',
+                'novels.slug',
+                'novels.translator',
+                'novels.synopsis',
+                'novels.genres',
+                'novels.numberOfChapters'
+            )
+            ->first();
 
-        return response()->json([
-            'novel' => $novel,
-        ], 200);
+
+        return response()->json($novel);
     }
 
     /**
@@ -72,19 +107,14 @@ class NovelController extends Controller
     public function getNovelsChapters(string $slug)
     {
         //
-        $novel = Novel::firstWhere('slug', $slug);
-        $chapters = $novel->chapters->map(function ($chapter) {
-            return [
-                'id' => $chapter->id,
-                'title' => $chapter->title,
-                'slug' => $chapter->slug,
-                'created_at' => $chapter->created_at->format('Y-m-d')
-            ];
-        });
-
-        return response()->json([
-            'chapters' => $chapters,
-        ], 200);
+        $novelId = Novel::firstWhere('slug', $slug)->id;
+        $selectedColumns = ['id', 'created_at', 'updated_at', 'title', 'novel_id', 'slug'];
+        if ($novelId) {
+            $chapters = Chapter::select($selectedColumns)->where('novel_id', $novelId)->get();
+            return response()->json($chapters);
+        } else {
+            abort(404, 'Resource not found');
+        }
     }
 
     /**
@@ -97,15 +127,134 @@ class NovelController extends Controller
             $desiredGenres = explode(",", $filter);
 
             if ($sortBy === 'name') {
-                return Novel::filterByGenres($desiredGenres)->orderBy('title', 'asc')->get();
+                $novels = Novel::select('novels.*')
+                    ->selectRaw('COUNT(reviews.id) as totalReviews')
+                    ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+                    ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+                    ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+                    ->groupBy(
+                        'novels.id',
+                        'novels.created_at',
+                        'novels.updated_at',
+                        'novels.title',
+                        'novels.slug',
+                        'novels.translator',
+                        'novels.synopsis',
+                        'novels.genres',
+                        'novels.numberOfChapters'
+                    )
+                    ->filterByGenres($desiredGenres)
+                    ->orderBy('title', 'asc')
+                    ->get();
+
+                return response()->json($novels);
             } else if ($sortBy === 'chapters') {
-                return Novel::filterByGenres($desiredGenres)->orderBy('numberOfChapters', 'asc')->get();
+                $novels = Novel::select('novels.*')
+                    ->selectRaw('COUNT(reviews.id) as totalReviews')
+                    ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+                    ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+                    ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+                    ->groupBy(
+                        'novels.id',
+                        'novels.created_at',
+                        'novels.updated_at',
+                        'novels.title',
+                        'novels.slug',
+                        'novels.translator',
+                        'novels.synopsis',
+                        'novels.genres',
+                        'novels.numberOfChapters'
+                    )
+                    ->filterByGenres($desiredGenres)
+                    ->orderBy('numberOfChapters', 'desc')
+                    ->get();
+
+                return response()->json($novels);
+            } else {
+                $novels = Novel::select('novels.*')
+                    ->selectRaw('COUNT(reviews.id) as totalReviews')
+                    ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+                    ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+                    ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+                    ->groupBy(
+                        'novels.id',
+                        'novels.created_at',
+                        'novels.updated_at',
+                        'novels.title',
+                        'novels.slug',
+                        'novels.translator',
+                        'novels.synopsis',
+                        'novels.genres',
+                        'novels.numberOfChapters'
+                    )
+                    ->filterByGenres($desiredGenres)
+                    ->orderBy('recommendationRatio', 'desc')
+                    ->get();
+                return response()->json($novels);
             }
         } else {
             if ($sortBy === 'name') {
-                return Novel::orderBy('title', 'asc')->get();
+                $novels = Novel::select('novels.*')
+                    ->selectRaw('COUNT(reviews.id) as totalReviews')
+                    ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+                    ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+                    ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+                    ->groupBy(
+                        'novels.id',
+                        'novels.created_at',
+                        'novels.updated_at',
+                        'novels.title',
+                        'novels.slug',
+                        'novels.translator',
+                        'novels.synopsis',
+                        'novels.genres',
+                        'novels.numberOfChapters'
+                    )
+                    ->orderBy('title', 'asc')
+                    ->get();
+
+                return response()->json($novels);
             } else if ($sortBy === 'chapters') {
-                return Novel::orderBy('numberOfChapters', 'asc')->get();
+                $novels = Novel::select('novels.*')
+                    ->selectRaw('COUNT(reviews.id) as totalReviews')
+                    ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+                    ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+                    ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+                    ->groupBy(
+                        'novels.id',
+                        'novels.created_at',
+                        'novels.updated_at',
+                        'novels.title',
+                        'novels.slug',
+                        'novels.translator',
+                        'novels.synopsis',
+                        'novels.genres',
+                        'novels.numberOfChapters'
+                    )
+                    ->orderBy('numberOfChapters', 'desc')
+                    ->get();
+
+                return response()->json($novels);
+            } else {
+                $novels = Novel::select('novels.*')
+                    ->selectRaw('COUNT(reviews.id) as totalReviews')
+                    ->selectRaw('SUM(reviews.isRecommended) as totalRecommendations')
+                    ->selectRaw('SUM(reviews.isRecommended) / COUNT(reviews.id) as recommendationRatio')
+                    ->leftJoin('reviews', 'reviews.novel_id', '=', 'novels.id')
+                    ->groupBy(
+                        'novels.id',
+                        'novels.created_at',
+                        'novels.updated_at',
+                        'novels.title',
+                        'novels.slug',
+                        'novels.translator',
+                        'novels.synopsis',
+                        'novels.genres',
+                        'novels.numberOfChapters'
+                    )
+                    ->orderBy('recommendationRatio', 'desc')
+                    ->get();
+                return response()->json($novels);
             }
         }
     }

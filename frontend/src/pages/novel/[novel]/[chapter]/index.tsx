@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Popover } from '@headlessui/react'
 import { Comment } from "@/components/comment";
 import { useRouter } from 'next/router'
@@ -69,6 +69,35 @@ dayjs.extend(relativeTime)
 //         </div>
 //     )
 // }
+
+function AddBookmarkBtn({
+    bookmarkToAdd
+}: {
+    bookmarkToAdd: {
+        novelSlug: string;
+        novelTitle: string;
+        chapterSlug: string;
+        chapterTitle: string;
+    }
+}) {
+    const addBookmarkMutation = useAddBookmark()
+    const addBookmark = () => {
+        addBookmarkMutation.mutate(bookmarkToAdd)
+    }
+    return (
+        <button
+            className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm text-blue-500 shadow-sm focus:relative"
+            onClick={addBookmark}
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 icon icon-tabler icon-tabler-bookmark" width={24} height={24} viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z"></path>
+            </svg>
+
+            Bookmark chapter
+        </button>
+    )
+}
 
 function createMarkup(markup: string) {
     return {
@@ -187,44 +216,13 @@ export default function Chapter() {
         commentsToRender = <ServerError message={errorComments?.message ?? "can't find resource"} />
     }
 
-    // tracking progress
-    const chapterRef = useRef<HTMLDivElement | null>(null)
+    // add bookmark
     const bookmarkToAdd = {
         novelSlug: `${novel}`,
         novelTitle: `${dataNovel?.title}`,
         chapterSlug: `${chapter}`,
         chapterTitle: `${dataChapter?.title}`,
     }
-
-    const addBookmarkMutation = useAddBookmark()
-    const [read, setRead] = useState(false)
-
-    useEffect(() => {
-        function handleScroll() {
-            if (chapterRef.current) {
-                const scrollPosition = window.scrollY
-                const chapterOffsetTop = chapterRef.current.offsetTop
-                const chapterHeight = chapterRef.current.offsetHeight
-
-                const threshold = chapterOffsetTop + chapterHeight * 0.75
-
-                if (scrollPosition >= threshold) {
-                    setRead(read)
-                    // addBookmark()
-                }
-            }
-        }
-
-        window.addEventListener('scroll', handleScroll)
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll)
-            setRead(false)
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-
-    console.log(read)
 
     return (
         <>
@@ -285,11 +283,12 @@ export default function Chapter() {
                     {/* markup */}
                     {
                         dataChapter
-                            ? <div ref={chapterRef} className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.content ?? "")} />
+                            ? <div className="leading-normal" dangerouslySetInnerHTML={createMarkup(dataChapter?.content ?? "")} />
                             : <div className="self-center">
                                 <Loading />
                             </div>
                     }
+                    {user?.id && <AddBookmarkBtn bookmarkToAdd={bookmarkToAdd} />}
                     {dataNextChapter?.slug && <Link
                         href={`../${novel}/${dataNextChapter.slug}`}
                         className="self-center bg-gradient-to-r from-blue-500 to-blue-700 text-white uppercase rounded-full text-lg font-bold text-center py-4 w-48 my-4"
@@ -302,7 +301,6 @@ export default function Chapter() {
                     >
                         previous chapter
                     </Link>}
-
                 </div>
             </div>
             <div className="flex justify-center items-center max-w-6xl m-auto">

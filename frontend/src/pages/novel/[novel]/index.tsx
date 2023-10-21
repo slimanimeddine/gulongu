@@ -17,6 +17,7 @@ import { ServerError } from "@/components/serverError";
 import Head from "next/head";
 import { useNovelReviews } from "@/hooks/useNovelReviews";
 import { useNovelChapters } from "@/hooks/useNovelChapters";
+import { CommentSkeleton, NovelInfosCardSkeleton } from "@/components/skeleton";
 
 export default function Novel() {
     const [, setEnabled] = useState(false)
@@ -71,12 +72,16 @@ export default function Novel() {
     }
 
     if (isLoadingReviews || isRefetchingReviews) {
-        reviewsToRender = <Loading />
+        reviewsToRender = [1, 2, 3, 4].map(item => (
+            <CommentSkeleton key={item} />
+        ))
         reviewsModal = <Loading />
     }
 
     if (isErrorReviews || isRefetchErrorReviews) {
-        reviewsToRender = <ServerError message={errorReviews?.message ?? "can't find resource"} />
+        reviewsToRender = [1, 2, 3, 4].map(item => (
+            <ServerError key={item} message={errorReviews?.message ?? "can't find resource"} />
+        ))
         reviewsModal = <ServerError message={errorReviews?.message ?? "can't find resource"} />
     }
 
@@ -183,7 +188,7 @@ export default function Novel() {
     }
 
     if (isLoadingNovel) {
-        novelInfosCard = <Loading />
+        novelInfosCard = <NovelInfosCardSkeleton />
         addReview = <Loading />
         reviewsModal = <Loading />
     }

@@ -86,7 +86,7 @@ function AddBookmarkBtn({
     }
     return (
         <button
-            className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm text-blue-500 shadow-sm focus:relative"
+            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm text-blue-500 border hover:bg-gray-50 dark:hover:bg-stone-900 dark:border-stone-800 focus:relative"
             onClick={addBookmark}
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 icon icon-tabler icon-tabler-bookmark" width={24} height={24} viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -94,7 +94,7 @@ function AddBookmarkBtn({
                 <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z"></path>
             </svg>
 
-            Bookmark chapter
+            Mark chapter as read
         </button>
     )
 }

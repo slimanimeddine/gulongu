@@ -19,7 +19,6 @@ backend/.fleet
 backend/.idea
 backend/.vscode
 backend/resources
-backend/database/seeders
 
 frontend/node_modules
 frontend/.pnp

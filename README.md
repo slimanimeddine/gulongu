@@ -2,21 +2,6 @@
 
 **Project Description**: Gulongu is a web application that serves as a clone of the famous novels website [wuxiaworld](https://www.wuxiaworld.com/), but only contains novels written by the author [Gu Long](https://en.wikipedia.org/wiki/Gu_Long).
 
-## Features
-
-- Only contains novels by the author Gulong.
-- [Add more features here]
-
-### Prerequisites
-
-Ensure you have the following software installed on your system:
-
-- Node.js
-- npm (Node Package Manager)
-- PHP
-- Composer
-- Laravel
-
 ### Installation
 
 1. Clone the repository:
@@ -52,15 +37,15 @@ Ensure you have the following software installed on your system:
    ```
 
 6. Ensure that your backend's `APP_URL` and `FRONTEND_URL` environment variables are set to these values:
-```bash
-APP_URL=http://localhost:8000
-FRONTEND_URL=http://localhost:3000
-```
+   ```bash
+   APP_URL=http://localhost:8000
+   FRONTEND_URL=http://localhost:3000
+   ```
 
 7. Ensure that your frontend's env file is set like this:
-```bash
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
-```
+   ```bash
+   NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+   ```
 
 ## License
 
